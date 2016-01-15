@@ -1,0 +1,23 @@
+C:\Users\CyberTechnologyInc\AppData\Local\Temporary Projects\TopKekMemeBot\bin\Debug\TopKekMemeBot.exe.config
+C:\Users\CyberTechnologyInc\Documents\Visual Studio 2015\Projects\C#\TopKekMemeBot\TopKekMemeBot\obj\Debug\TopKekMemeBot.Bot.resources
+C:\Users\CyberTechnologyInc\Documents\Visual Studio 2015\Projects\C#\TopKekMemeBot\TopKekMemeBot\obj\Debug\TopKekMemeBot.Login.resources
+C:\Users\CyberTechnologyInc\Documents\Visual Studio 2015\Projects\C#\TopKekMemeBot\TopKekMemeBot\obj\Debug\TopKekMemeBot.Properties.Resources.resources
+C:\Users\CyberTechnologyInc\Documents\Visual Studio 2015\Projects\C#\TopKekMemeBot\TopKekMemeBot\obj\Debug\TopKekMemeBot.csproj.GenerateResource.Cache
+C:\Users\CyberTechnologyInc\Documents\Visual Studio 2015\Projects\C#\TopKekMemeBot\TopKekMemeBot\bin\Debug\TopKekMemeBot.exe.config
+C:\Users\CyberTechnologyInc\Documents\Visual Studio 2015\Projects\C#\TopKekMemeBot\TopKekMemeBot\bin\Debug\TopKekMemeBot.exe
+C:\Users\CyberTechnologyInc\Documents\Visual Studio 2015\Projects\C#\TopKekMemeBot\TopKekMemeBot\bin\Debug\TopKekMemeBot.pdb
+C:\Users\CyberTechnologyInc\Documents\Visual Studio 2015\Projects\C#\TopKekMemeBot\TopKekMemeBot\obj\Debug\TopKekMemeBot.exe
+C:\Users\CyberTechnologyInc\Documents\Visual Studio 2015\Projects\C#\TopKekMemeBot\TopKekMemeBot\obj\Debug\TopKekMemeBot.pdb
+C:\Users\CyberTechnologyInc\Documents\Visual Studio 2015\Projects\C#\TopKekMemeBot\TopKekMemeBot\obj\Debug\TopKekMemeBot.Updater.resources
+C:\Users\CyberTechnologyInc\Documents\Visual Studio 2015\Projects\C#\TopKekMemeBot\TopKekMemeBot\obj\Debug\TopKekMemeBot.csprojResolveAssemblyReference.cache
+C:\Users\CyberTechnologyInc\Documents\GitHub\C-Basic-Twitch-Bot\Twitch Bot\bin\Debug\TopKekMemeBot.exe.config
+C:\Users\CyberTechnologyInc\Documents\GitHub\C-Basic-Twitch-Bot\Twitch Bot\bin\Debug\TopKekMemeBot.exe
+C:\Users\CyberTechnologyInc\Documents\GitHub\C-Basic-Twitch-Bot\Twitch Bot\bin\Debug\TopKekMemeBot.pdb
+C:\Users\CyberTechnologyInc\Documents\GitHub\C-Basic-Twitch-Bot\Twitch Bot\obj\Debug\TopKekMemeBot.csprojResolveAssemblyReference.cache
+C:\Users\CyberTechnologyInc\Documents\GitHub\C-Basic-Twitch-Bot\Twitch Bot\obj\Debug\TopKekMemeBot.Bot.resources
+C:\Users\CyberTechnologyInc\Documents\GitHub\C-Basic-Twitch-Bot\Twitch Bot\obj\Debug\TopKekMemeBot.Login.resources
+C:\Users\CyberTechnologyInc\Documents\GitHub\C-Basic-Twitch-Bot\Twitch Bot\obj\Debug\TopKekMemeBot.Properties.Resources.resources
+C:\Users\CyberTechnologyInc\Documents\GitHub\C-Basic-Twitch-Bot\Twitch Bot\obj\Debug\TopKekMemeBot.Updater.resources
+C:\Users\CyberTechnologyInc\Documents\GitHub\C-Basic-Twitch-Bot\Twitch Bot\obj\Debug\TopKekMemeBot.csproj.GenerateResource.Cache
+C:\Users\CyberTechnologyInc\Documents\GitHub\C-Basic-Twitch-Bot\Twitch Bot\obj\Debug\TopKekMemeBot.exe
+C:\Users\CyberTechnologyInc\Documents\GitHub\C-Basic-Twitch-Bot\Twitch Bot\obj\Debug\TopKekMemeBot.pdb

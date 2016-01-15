@@ -1,0 +1,11 @@
+C:\Users\CyberTechnologyInc\Documents\GitHub\C-Basic-Twitch-Bot\Twitch Bot\bin\Debug\TopKekMemeBot.exe.config
+C:\Users\CyberTechnologyInc\Documents\GitHub\C-Basic-Twitch-Bot\Twitch Bot\obj\Debug\TopKekMemeBot.exe
+C:\Users\CyberTechnologyInc\Documents\GitHub\C-Basic-Twitch-Bot\Twitch Bot\obj\Debug\TopKekMemeBot.pdb
+C:\Users\CyberTechnologyInc\Documents\GitHub\C-Basic-Twitch-Bot\Twitch Bot\obj\Debug\Twitch Bot.csprojResolveAssemblyReference.cache
+C:\Users\CyberTechnologyInc\Documents\GitHub\C-Basic-Twitch-Bot\Twitch Bot\obj\Debug\TopKekMemeBot.Bot.resources
+C:\Users\CyberTechnologyInc\Documents\GitHub\C-Basic-Twitch-Bot\Twitch Bot\obj\Debug\Twitch Bot.csproj.GenerateResource.Cache
+C:\Users\CyberTechnologyInc\Documents\GitHub\C-Basic-Twitch-Bot\Twitch Bot\bin\Debug\TopKekMemeBot.exe
+C:\Users\CyberTechnologyInc\Documents\GitHub\C-Basic-Twitch-Bot\Twitch Bot\bin\Debug\TopKekMemeBot.pdb
+C:\Users\CyberTechnologyInc\Documents\GitHub\C-Basic-Twitch-Bot\Twitch Bot\bin\Debug\Newtonsoft.Json.dll
+C:\Users\CyberTechnologyInc\Documents\GitHub\C-Basic-Twitch-Bot\Twitch Bot\bin\Debug\Newtonsoft.Json.xml
+C:\Users\CyberTechnologyInc\Documents\GitHub\C-Basic-Twitch-Bot\Twitch Bot\obj\Debug\TopKekMemeBot.Properties.Resources.resources
