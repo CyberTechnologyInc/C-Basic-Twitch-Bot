@@ -7,8 +7,8 @@
     <ProjectGuid>{73F57623-428D-4629-9FC8-3E5E63E1B66C}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>TopKekMemeBot</RootNamespace>
-    <AssemblyName>TopKekMemeBot</AssemblyName>
+    <RootNamespace>TwitchBot</RootNamespace>
+    <AssemblyName>Twitch Bot</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -48,9 +48,12 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>TopKekMemeBot.Program</StartupObject>
+    <StartupObject>TwitchBot.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="CTI.SimpleSettings">
+      <HintPath>..\..\..\Documents\Visual Studio 2015\Projects\C#\Simple Settings\Simple Settings\bin\Debug\CTI.SimpleSettings.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.8.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
@@ -74,6 +77,10 @@
     <Compile Include="Bot.Designer.cs">
       <DependentUpon>Bot.cs</DependentUpon>
     </Compile>
+    <Compile Include="ChatCommands\AdminCommands.cs" />
+    <Compile Include="ChatCommands\DefaultChatCommands.cs" />
+    <Compile Include="ChatCommands\IAdminChatCommand.cs" />
+    <Compile Include="ChatCommands\IChatCommand.cs" />
     <Compile Include="JSON Objects\Stream Data.cs" />
     <Compile Include="Misc.cs" />
     <Compile Include="Program.cs" />

@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace TopKekMemeBot {
+namespace TwitchBot {
 
 	internal class TwitchIRCConnection {
 		private TcpClient Client = new TcpClient();
@@ -48,12 +48,14 @@ namespace TopKekMemeBot {
 		}
 
 		public Twitch_User get_sender(string msg) {
+			//This could probably be made faster, will do it soon.
 			//Gather all of the user's data (everything before a space), which is concatenated together with ;
 			Twitch_User TwitchUser;
 			string name = "";
 			bool sub = false;
 			string moderator = "";
             try {
+				//Linq, please.
 				var arr = msg.Substring(0, msg.IndexOf(" ")).Split(';').Select(x => x.Split('=')).ToDictionary(x => x[0], x => x[1]);
 
 				name = (arr.ContainsKey("display-name")) ? arr["display-name"] : "";

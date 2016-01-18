@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 
-namespace TopKekMemeBot {
+namespace TwitchBot {
 	class Program {
 		public static Bot BotForm { get; set; }
 
@@ -9,7 +9,6 @@ namespace TopKekMemeBot {
 		public static string APICode { get; set; }
 		public static string Username { get; set; }
 		public static string settingsDirectory;
-		public static string settingsFile;
 		public static string loginSettingsFile;
 		public static string giveawayPointsFile;
 

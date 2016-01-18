@@ -3,7 +3,7 @@ using System;
 using System.IO;
 using System.Windows.Forms;
 
-namespace TopKekMemeBot {
+namespace TwitchBot {
 
 	public class Misc {
 		public Bot BotForm { get; set; }

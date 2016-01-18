@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TopKekMemeBot {
+namespace TwitchBot {
 	class Twitch_User {
 		public string Username { set; get; }
 		public string User_Type { set; get; }

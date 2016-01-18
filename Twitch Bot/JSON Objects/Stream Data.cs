@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TopKekMemeBot.JSON_Objects {
+namespace TwitchBot.JSON_Objects {
 	public class Stream_Data {
 		public class Links {
 			public string self { get; set; }

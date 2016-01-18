@@ -7,19 +7,19 @@ using System.Net;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml.Linq;
-using TopKekMemeBot.JSON_Objects;
+using TwitchBot.JSON_Objects;
+using TwitchBot.ChatCommands;
+using CTI.SimpleSettings;
 
-namespace TopKekMemeBot {
+namespace TwitchBot {
 
 	public partial class Bot : Form {
-		private string bot_name = "Username";
-		private string bot_password = "oauth:password";
-
 		private Dictionary<string, double> cooldownList = new Dictionary<string, double>();
-		private Dictionary<string, string> commandList = new Dictionary<string, string>();
+		//private Dictionary<string, string> commandList = new Dictionary<string, string>();
+
+		private SettingsManager Settings = new SettingsManager();
 
 		private WebClient wc = new WebClient();
-		private string website;
 
 		private bool BotEnabled = true;
 
@@ -33,30 +33,69 @@ namespace TopKekMemeBot {
 
 		private TwitchIRCConnection ChannelConnection;
 		private TwitchIRCConnection WhisperConnection;
+		private List<IAdminChatCommand> PriorityChatCommands = new List<IAdminChatCommand>();
+		private List<IChatCommand> ChatCommands = new List<IChatCommand>();
+		
+		private void AddCommandToList(string command, string description, string privileges) {
+			ListViewItem lvi = new ListViewItem();
+			lvi.Text = command;
+			lvi.SubItems.Add(description);
+			lvi.SubItems.Add(privileges);
+			lstViewCommands.Items.Add(lvi);
+		}
+
+		//Think of a good way of setting up commands...
+		private void SetupCommands() {
+			//Implement a way to iterate all chat commands with one loop.
+			foreach(var itm in PriorityChatCommands) {
+				itm.Initialise();
+			}
+
+			foreach(var itm in ChatCommands) {
+				itm.Initialise();
+			}
+
+			//Load all commands into the commands listview
+			foreach(var itm in PriorityChatCommands) {
+				for(int i = 0; i < itm.commands.Length; i++) {
+					AddCommandToList(itm.commands[i], itm.descriptions[i], itm.privileges[i]);
+				}
+			}
+
+			foreach(var itm in ChatCommands) {
+				for(int i = 0; i < itm.commands.Length; i++) {
+					AddCommandToList(itm.commands[i], itm.descriptions[i], itm.privileges[i]);
+				}
+			}
+		}
 
 		private void Bot_Load(object sender, EventArgs e) {
 			wc.Proxy = null;
 
-			setup_commands_list();
+			SetupCommands();
 
-			setup_tooltips();
+			//Add all chat commands
+			//Add priority commands
+			PriorityChatCommands.Add(new AdminCommands());
+			
+			//New method of adding chat commands
+			ChatCommands.Add(new DefaultChatCommands());
 
+			SetupCommands();
+
+			//Set instance
 			MiscFuncs.BotForm = this;
 
-			//Get API Code from Misc.cs
-			txtAPICode.Text = Program.APICode;
-
-			website = "http://cybertechnologyinc.co.uk/API/SMITE/getData.php?pid=1&api_user=" + Program.Username + "&api_code=" + Program.APICode;
-
-			if(File.Exists(Program.settingsFile)) {
-				loadSettings();
+			if(File.Exists(settingsFile)) {
+				Settings.LoadSettings(settingsFile);
+				LoadSettings();
 			}
 
 			//Setup connections to IRC servers
 			//Setup connection to normal chat
-			ChannelConnection = new TwitchIRCConnection("irc.twitch.tv", txtChannel.Text, bot_name, bot_password);
+			ChannelConnection = new TwitchIRCConnection("irc.twitch.tv", txtChannel.Text, txtBotUsername.Text, txtBotPassword.Text);
 			//Setup connection to be able to whisper to users
-			WhisperConnection = new TwitchIRCConnection("199.9.253.119", txtChannel.Text, bot_name, bot_password);
+			WhisperConnection = new TwitchIRCConnection("199.9.253.119", txtChannel.Text, txtBotUsername.Text, txtBotPassword.Text);
 
 			if(chkboxAutoStart.Checked) {
 				cmdStartBot.PerformClick();
@@ -79,8 +118,10 @@ namespace TopKekMemeBot {
 			}
 		}
 
+		private string settingsFile = Application.StartupPath + "\\config.xml";
 		#region "Save/Load Settings"
 
+		/*
 		public Bot_Settings Settings = new Bot_Settings();
 
 		public class Bot_Settings {
@@ -98,15 +139,68 @@ namespace TopKekMemeBot {
 			public string Giveaway_EnterCommand { get; set; }
 			public string Giveaway_ShowPointsCommand { get; set; }
 		}
+		*/
+
+		private void SaveSettings() {
+			//Bot connection details
+			Settings.AddSetting("bot_username", txtBotUsername.Text);
+			Settings.AddSetting("bot_password", txtBotPassword.Text);
+			Settings.AddSetting("channel", txtChannel.Text);
+
+			//General bot settings
+			Settings.AddSetting("auto_start_bot", chkboxAutoStart.Checked);
+			Settings.AddSetting("command_cooldown", txtCooldownTime.Text);
+			Settings.AddSetting("welcome_message", txtWelcomeMessage.Text);
+			Settings.AddSetting("leaving_message", txtLeavingMessage.Text);
+			Settings.AddSetting("purge_non_sub_links", chkboxPurgeNonSubsLinks.Checked);
+			Settings.AddSetting("log_chat_messages", chkboxLogChatMessages.Checked);
+
+			//Giveaway settings
+			Settings.AddSetting("giveaway_points_per_minute", txtGiveawayPointsEarnedPerX.Text);
+			//Settings.AddSetting("giveaway_enter_command", txt.Text);
+
+			//Save all settings that have been added
+			Settings.SaveSettings(settingsFile);
+		}
+
+		//Only temporary, hopefully.
+		//Defaults to false
+		private bool GetBool(string data) {
+			bool tmpBool;
+			if(Boolean.TryParse(data, out tmpBool)) {
+				return tmpBool;
+			} else {
+				return false;
+			}
+		}
+
+		private void LoadSettings() {
+			//Bot connection details
+			txtBotUsername.Text = (string)Settings.GetSetting("bot_username");
+			txtBotPassword.Text = (string)Settings.GetSetting("bot_password");
+			txtChannel.Text = (string)Settings.GetSetting("channel");
+
+			//General bot settings
+			chkboxAutoStart.Checked = GetBool(Settings.GetSetting("auto_start_bot").ToString());
+            txtCooldownTime.Text = (string)Settings.GetSetting("command_cooldown");
+            txtWelcomeMessage.Text = (string)Settings.GetSetting("welcome_message");
+			txtLeavingMessage.Text = (string)Settings.GetSetting("leaving_message");
+			chkboxLogChatMessages.Checked = GetBool(Settings.GetSetting("log_chat_messages").ToString());
+			chkboxPurgeNonSubsLinks.Checked = GetBool(Settings.GetSetting("purge_non_sub_links").ToString());
+
+			//Giveaway settings
+			txtGiveawayPointsEarnedPerX.Text = (string)Settings.GetSetting("giveaway_points_per_minute");
+        }
 
 		private void chkboxAutoStart_CheckedChanged(object sender, EventArgs e) {
-			saveSettings();
+			SaveSettings();
 		}
 
 		private void btnSaveSettings_Click(object sender, EventArgs e) {
-			saveSettings();
+			SaveSettings();
 		}
 
+		/*
 		public void saveSettings() {
 			Settings = new Bot_Settings {
 				AutoStartProgram = chkboxAutoStart.Checked,
@@ -124,8 +218,11 @@ namespace TopKekMemeBot {
 			StreamWriter sw = new StreamWriter(Program.settingsFile);
 			sw.WriteLine(JsonConvert.SerializeObject(Settings, Formatting.Indented));
 			sw.Close();
+			
 		}
+		*/
 
+		/*
 		public void loadSettings() {
 			if(File.Exists(Program.settingsFile)) {
 				StreamReader srBot = new StreamReader(Program.settingsFile);
@@ -152,6 +249,8 @@ namespace TopKekMemeBot {
 				srBot.Close();
 			}
 		}
+		*/
+		
 
 		#endregion "Save/Load Settings"
 
@@ -206,35 +305,7 @@ namespace TopKekMemeBot {
 
 		#endregion "Cooldown system"
 
-		public void setup_commands_list() {
-			commandList["!turnon"] = "turnOnBot";
-			commandList["!turnoff"] = "turnOffBot";
-
-			//commandList["!uptime"] = "uptimeCMD";
-
-			commandList["!maker"] = "creditCMD";
-
-			commandList["!testers"] = "testersCMD";
-
-			commandList["!commands"] = "helpCMD";
-			commandList["!help"] = "helpCMD";
-
-			commandList["!song"] = "songCMD";
-
-			commandList["!joust"] = "joustCMD";
-			commandList["!jelo"] = "joustCMD";
-
-			commandList["!conquest"] = "conquestCMD";
-			commandList["!elo"] = "conquestCMD";
-
-			commandList["!give"] = "givePointsCMD";
-			commandList["!toppoints"] = "topPointsCMD";
-			commandList["!points"] = "showPointsCMD";
-
-			commandList["!enter"] = "enterGiveawayCMD";
-		}
-
-		public void setup_tooltips() {
+		public void SetupTooltips() {
 			ToolTip toolTip1 = new ToolTip();
 			toolTip1.AutoPopDelay = 5000;
 			toolTip1.InitialDelay = 500;
@@ -340,202 +411,43 @@ namespace TopKekMemeBot {
 							}
 						}
 					}
-
-					//Admin commands.
-					if(sender.Username.ToLower() == ChannelConnection.get_channel(false).ToLower() || sender.Username == "ManselD") {
-						if(commandList.ContainsKey(msg[0])) {
-							switch(commandList[msg[0]]) {
-								case "turnOffBot":
-									ChannelConnection.send_message(sender + " is abusing me, I'm off!");
-									logMessage(LOG_PREFIX + " Bot has been turned off by " + sender);
-									BotEnabled = false;
-									break;
-
-								case "turnOnBot":
-									ChannelConnection.send_message(sender + " has summoned me. Hello everyone!");
-									logMessage(LOG_PREFIX + " Bot has been turned on by " + sender);
-									BotEnabled = true;
-									break;
-							}
-						}
-					}
-
-					//Don't process any other commands if the bot has been turned off through chat.
-					if(BotEnabled) {
-						if(commandList.ContainsKey(msg[0])) {
-							switch(commandList[msg[0]]) {
-								case "testersCMD":
-									if(!commandOnCooldown("testersCMD")) {
-										ChannelConnection.send_message("Thank the lab rats Itzkydvil and Poul76 for testing this bot!");
-									}
-									break;
-
-								case "creditCMD":
-									if(!commandOnCooldown("creditCMD")) {
-										ChannelConnection.send_message("This bot was made by ManselD!");
-									}
-									break;
-
-								case "helpCMD":
-									if(!commandOnCooldown("helpCMD")) {
-										var sb = new StringBuilder();
-										sb.Append("Here is the full list of commands: ");
-										foreach(string cmd in commandList.Keys) {
-											sb.Append(cmd + ", ");
-										}
-										ChannelConnection.send_message(sb.ToString());
-									}
-									break;
-
-								case "uptimeCMD":
-									if(!commandOnCooldown("uptimeCMD")) {
-										var check = new WebClient();
-										check.Proxy = null;
-										check.DownloadStringAsync(new Uri("https://api.twitch.tv/kraken/streams/samdadude"));
-										check.DownloadStringCompleted += (s, e) => {
-											dynamic StreamDat = JObject.Parse(e.Result);
-											//DateTime dt = new DateTime(long.Parse(StreamDat.stream.created_at));
-
-											//ChannelConnection.send_message("The stream has been up for " + dt.Hour + " hours and " + dt.Minute + " minutes.");
-										};
-									}
-									break;
-
-								case "songCMD":
-									string[] songList = { "https://www.youtube.com/watch?v=z6qaO-vX080", "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "https://www.youtube.com/watch?v=oT3mCybbhf0" };
-									var rnd = new Random();
-									if(!commandOnCooldown("songCMD")) {
-										ChannelConnection.send_message("The current song playing is: " + songList[rnd.Next(0, songList.Length)]);
-									}
-									break;
-
-								case "joustCMD":
-									if(!(msg.Length == 2)) { break; }
-									if(!commandOnCooldown("joustCommand")) {
-										ChannelConnection.send_message(wc.DownloadString(website + "&mode=joust&code=" + txtAPICode.Text + "&username=" + msg[1]));
-									} else {
-										//send_message(getCooldown("joustCommand"));
-									}
-									break;
-
-								case "conquestCMD":
-									if(!(msg.Length == 2)) { break; }
-									if(!commandOnCooldown("conquestCommand")) {
-										ChannelConnection.send_message(wc.DownloadString(website + "&mode=conquest&code=" + txtAPICode.Text + "&username=" + msg[1]));
-									} else {
-										//send_message(getCooldown("conquestCommand"));
-									}
-									break;
-
-								case "enterGiveawayCMD":
-									//Enter user into giveaway if one is open.
-									if(GiveawayActive) {
-										var inGiveaway = false;
-										foreach(string activeUser in giveawayEnteredUsers.Items) {
-											if(activeUser == sender.Username) {
-												inGiveaway = true;
-											}
-										}
-
-										if(!inGiveaway) {
-											if(removePoints(sender.Username.ToLower(), Convert.ToInt32(txtGiveawayPointsRequired.Text))) {
-												addGiveawayUserToList(sender.Username);
-												WhisperConnection.send_message("/w " + sender.Username + " You've been added into the giveaway!");
-											} else {
-												WhisperConnection.send_message("/w " + sender.Username + " You don't have enough points to enter the giveaway.");
-											}
-										}
-									}
-									break;
-
-								case "topPointsCMD":
-									try {
-										//Get the user with the most points.
-										var topUser = "";
-										var topPoints = new Int64();
-										var doc = XDocument.Load(Program.giveawayPointsFile);
-										foreach(XElement el in doc.Element("Users").Elements()) {
-											if(topUser == "") {
-												topUser = el.Element("Username").Value;
-												topPoints = Convert.ToInt64(el.Element("Points").Value);
-											} else {
-												if(Convert.ToInt64(el.Element("Points").Value) > topPoints) {
-													topUser = el.Element("Username").Value;
-													topPoints = Convert.ToInt64(el.Element("Points").Value);
-												}
-											}
-										}
-
-										ChannelConnection.send_message(topUser + " currently has the most points with " + topPoints + " points.");
-									} catch(Exception ex) {
-										logMessage("Error with command '" + msg[0] + "': " + ex.ToString());
-									}
-									break;
-
-								case "showPointsCMD":
-									try {
-										//Show amount of points the user has.
-										var docTwo = XDocument.Load(Program.giveawayPointsFile);
-										var points = new Int64();
-										foreach(XElement el in docTwo.Element("Users").Elements()) {
-											if(el.Element("Username").Value == sender.Username.ToLower()) {
-												points = Convert.ToInt64(el.Element("Points").Value);
-												break;
-											}
-										}
-
-										ChannelConnection.send_message(sender.Username + " has " + points + " points.");
-									} catch(Exception ex) {
-										logMessage("Error with command '" + msg[0] + "': " + ex.ToString());
-									}
-									break;
-
-								case "givePointsCMD":
-									try {
-										//!givepoints name amount
-										if(!(msg[1] is string) || msg[1] == null) {
-											return;
-										}
-
-										var givenPoints = Math.Abs(Int64.Parse(msg[2]));
-										var docThree = XDocument.Load(Program.giveawayPointsFile);
-										var canAfford = false;
-										foreach(XElement el in docThree.Element("Users").Elements()) {
-											if(el.Element("Username").Value == sender.Username.ToLower()) {
-												if(Convert.ToInt64(el.Element("Points").Value) >= givenPoints) {
-													canAfford = true;
-												} else {
-													canAfford = false;
-												}
-												break;
-											}
-										}
-
-										if(canAfford) {
-											foreach(XElement el in docThree.Element("Users").Elements()) {
-												if(el.Element("Username").Value == sender.Username.ToLower()) {
-													//Remove points from giver.
-													el.Element("Points").SetValue(Convert.ToInt64(el.Element("Points").Value) - givenPoints);
-													WhisperConnection.send_message("/w " + sender.Username + " You've given " + givenPoints + " points to " + msg[1]);
-												} else if(el.Element("Username").Value == msg[1].ToLower()) {
-													//Add points to receiver.
-													el.Element("Points").SetValue(Convert.ToInt64(el.Element("Points").Value) + givenPoints);
-													WhisperConnection.send_message("/w " + msg[1] + " You've received " + givenPoints + " points from " + sender.Username);
-												}
-											}
-											//ChannelConnection.send_message(sender + " has given " + givenPoints + " points to " + msg[1] + "!");
-											docThree.Save(Program.giveawayPointsFile);
-										} else {
-											ChannelConnection.send_message(sender.Username + ", you can't afford that you dirty peasant!");
-										}
-									} catch(Exception ex) {
-										logMessage("Error with command '" + msg[0] + "': " + ex.ToString());
-									}
-									break;
-							}
-						}
-					}
 				} else {
+				}
+
+				//Deal with priority commands
+				foreach(var processor in PriorityChatCommands) {
+					//if(processor.commands) {
+						if(sender.Username.ToLower() == ChannelConnection.get_channel(false).ToLower() || sender.Username == "ManselD") {
+							object[] response = processor.ProcessCommand(sender.Username, userMessage);
+							if(response != null) {
+								BotEnabled = processor.BotEnabled;
+
+								if(Convert.ToBoolean(response[0])) {
+									ChannelConnection.send_message((string)response[1]);
+								} else {
+									WhisperConnection.send_message((string)response[1]);
+								}
+
+								return;
+							}
+						}
+					//}
+				}
+
+				//Don't process any other commands if the bot has been turned off through chat.
+				if(BotEnabled) {
+					foreach(var processor in ChatCommands) {
+						object[] response = processor.ProcessCommand(sender.Username, userMessage);
+						if(response != null) {
+							if(Convert.ToBoolean(response[0])) {
+								ChannelConnection.send_message((string)response[1]);
+							} else {
+								WhisperConnection.send_message((string)response[1]);
+							}
+
+							return;
+						}
+					}
 				}
 			}
 		}

@@ -1,4 +1,4 @@
-﻿namespace TopKekMemeBot
+﻿namespace TwitchBot
 {
     partial class Bot
     {
@@ -36,6 +36,11 @@
 			this.chkboxAutoStart = new System.Windows.Forms.CheckBox();
 			this.cmdStartBot = new System.Windows.Forms.Button();
 			this.tbPageSettings = new System.Windows.Forms.TabPage();
+			this.txtBotPassword = new System.Windows.Forms.TextBox();
+			this.lblBotPassword = new System.Windows.Forms.Label();
+			this.lblBotUsername = new System.Windows.Forms.Label();
+			this.txtBotUsername = new System.Windows.Forms.TextBox();
+			this.chkboxPurgeNonSubsLinks = new System.Windows.Forms.CheckBox();
 			this.chkboxLogChatMessages = new System.Windows.Forms.CheckBox();
 			this.txtLeavingMessage = new System.Windows.Forms.TextBox();
 			this.lblLeavingMessage = new System.Windows.Forms.Label();
@@ -65,7 +70,11 @@
 			this.lblGiveawayProgress = new System.Windows.Forms.Label();
 			this.cmdGiveawayStart = new System.Windows.Forms.Button();
 			this.giveawayEnteredUsers = new System.Windows.Forms.ListBox();
-			this.chkboxPurgeNonSubsLinks = new System.Windows.Forms.CheckBox();
+			this.tbPageCommands = new System.Windows.Forms.TabPage();
+			this.lstViewCommands = new System.Windows.Forms.ListView();
+			this.chCommand = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+			this.chDescription = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+			this.chPrivileges = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.TabControl1.SuspendLayout();
 			this.tbPageMain.SuspendLayout();
 			this.tbPageSettings.SuspendLayout();
@@ -73,6 +82,7 @@
 			this.gpboxGiveaways.SuspendLayout();
 			this.gpbxGiveawaySettings.SuspendLayout();
 			this.gpboxCurrentGiveawaySettings.SuspendLayout();
+			this.tbPageCommands.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// TabControl1
@@ -80,6 +90,7 @@
 			this.TabControl1.Controls.Add(this.tbPageMain);
 			this.TabControl1.Controls.Add(this.tbPageSettings);
 			this.TabControl1.Controls.Add(this.tbPageGiveaway);
+			this.TabControl1.Controls.Add(this.tbPageCommands);
 			this.TabControl1.Location = new System.Drawing.Point(0, 0);
 			this.TabControl1.Multiline = true;
 			this.TabControl1.Name = "TabControl1";
@@ -152,6 +163,10 @@
 			// 
 			// tbPageSettings
 			// 
+			this.tbPageSettings.Controls.Add(this.txtBotPassword);
+			this.tbPageSettings.Controls.Add(this.lblBotPassword);
+			this.tbPageSettings.Controls.Add(this.lblBotUsername);
+			this.tbPageSettings.Controls.Add(this.txtBotUsername);
 			this.tbPageSettings.Controls.Add(this.chkboxPurgeNonSubsLinks);
 			this.tbPageSettings.Controls.Add(this.chkboxLogChatMessages);
 			this.tbPageSettings.Controls.Add(this.txtLeavingMessage);
@@ -173,6 +188,51 @@
 			this.tbPageSettings.TabIndex = 1;
 			this.tbPageSettings.Text = "Settings";
 			this.tbPageSettings.UseVisualStyleBackColor = true;
+			// 
+			// txtBotPassword
+			// 
+			this.txtBotPassword.Location = new System.Drawing.Point(91, 95);
+			this.txtBotPassword.Name = "txtBotPassword";
+			this.txtBotPassword.Size = new System.Drawing.Size(182, 20);
+			this.txtBotPassword.TabIndex = 17;
+			this.txtBotPassword.UseSystemPasswordChar = true;
+			// 
+			// lblBotPassword
+			// 
+			this.lblBotPassword.AutoSize = true;
+			this.lblBotPassword.Location = new System.Drawing.Point(13, 98);
+			this.lblBotPassword.Name = "lblBotPassword";
+			this.lblBotPassword.Size = new System.Drawing.Size(72, 13);
+			this.lblBotPassword.TabIndex = 16;
+			this.lblBotPassword.Text = "Bot Password";
+			// 
+			// lblBotUsername
+			// 
+			this.lblBotUsername.AutoSize = true;
+			this.lblBotUsername.Location = new System.Drawing.Point(11, 75);
+			this.lblBotUsername.Name = "lblBotUsername";
+			this.lblBotUsername.Size = new System.Drawing.Size(74, 13);
+			this.lblBotUsername.TabIndex = 15;
+			this.lblBotUsername.Text = "Bot Username";
+			// 
+			// txtBotUsername
+			// 
+			this.txtBotUsername.Location = new System.Drawing.Point(91, 72);
+			this.txtBotUsername.Name = "txtBotUsername";
+			this.txtBotUsername.Size = new System.Drawing.Size(182, 20);
+			this.txtBotUsername.TabIndex = 14;
+			// 
+			// chkboxPurgeNonSubsLinks
+			// 
+			this.chkboxPurgeNonSubsLinks.AutoSize = true;
+			this.chkboxPurgeNonSubsLinks.Checked = true;
+			this.chkboxPurgeNonSubsLinks.CheckState = System.Windows.Forms.CheckState.Checked;
+			this.chkboxPurgeNonSubsLinks.Location = new System.Drawing.Point(6, 223);
+			this.chkboxPurgeNonSubsLinks.Name = "chkboxPurgeNonSubsLinks";
+			this.chkboxPurgeNonSubsLinks.Size = new System.Drawing.Size(146, 17);
+			this.chkboxPurgeNonSubsLinks.TabIndex = 13;
+			this.chkboxPurgeNonSubsLinks.Text = "Purge any non-sub\'s links";
+			this.chkboxPurgeNonSubsLinks.UseVisualStyleBackColor = true;
 			// 
 			// chkboxLogChatMessages
 			// 
@@ -457,17 +517,46 @@
 			this.giveawayEnteredUsers.Size = new System.Drawing.Size(179, 264);
 			this.giveawayEnteredUsers.TabIndex = 0;
 			// 
-			// chkboxPurgeNonSubsLinks
+			// tbPageCommands
 			// 
-			this.chkboxPurgeNonSubsLinks.AutoSize = true;
-			this.chkboxPurgeNonSubsLinks.Checked = true;
-			this.chkboxPurgeNonSubsLinks.CheckState = System.Windows.Forms.CheckState.Checked;
-			this.chkboxPurgeNonSubsLinks.Location = new System.Drawing.Point(6, 223);
-			this.chkboxPurgeNonSubsLinks.Name = "chkboxPurgeNonSubsLinks";
-			this.chkboxPurgeNonSubsLinks.Size = new System.Drawing.Size(146, 17);
-			this.chkboxPurgeNonSubsLinks.TabIndex = 13;
-			this.chkboxPurgeNonSubsLinks.Text = "Purge any non-sub\'s links";
-			this.chkboxPurgeNonSubsLinks.UseVisualStyleBackColor = true;
+			this.tbPageCommands.Controls.Add(this.lstViewCommands);
+			this.tbPageCommands.Location = new System.Drawing.Point(4, 22);
+			this.tbPageCommands.Name = "tbPageCommands";
+			this.tbPageCommands.Padding = new System.Windows.Forms.Padding(3);
+			this.tbPageCommands.Size = new System.Drawing.Size(607, 300);
+			this.tbPageCommands.TabIndex = 3;
+			this.tbPageCommands.Text = "Commands";
+			this.tbPageCommands.UseVisualStyleBackColor = true;
+			// 
+			// lstViewCommands
+			// 
+			this.lstViewCommands.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.chCommand,
+            this.chDescription,
+            this.chPrivileges});
+			this.lstViewCommands.FullRowSelect = true;
+			this.lstViewCommands.GridLines = true;
+			this.lstViewCommands.Location = new System.Drawing.Point(0, 0);
+			this.lstViewCommands.Name = "lstViewCommands";
+			this.lstViewCommands.Size = new System.Drawing.Size(607, 300);
+			this.lstViewCommands.TabIndex = 0;
+			this.lstViewCommands.UseCompatibleStateImageBehavior = false;
+			this.lstViewCommands.View = System.Windows.Forms.View.Details;
+			// 
+			// chCommand
+			// 
+			this.chCommand.Text = "Command";
+			this.chCommand.Width = 226;
+			// 
+			// chDescription
+			// 
+			this.chDescription.Text = "Description";
+			this.chDescription.Width = 288;
+			// 
+			// chPrivileges
+			// 
+			this.chPrivileges.Text = "Privileges";
+			this.chPrivileges.Width = 77;
 			// 
 			// Bot
 			// 
@@ -478,7 +567,7 @@
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
 			this.Name = "Bot";
 			this.ShowIcon = false;
-			this.Text = "TopKekMemeBot";
+			this.Text = "Twitch Bot";
 			this.Load += new System.EventHandler(this.Bot_Load);
 			this.TabControl1.ResumeLayout(false);
 			this.tbPageMain.ResumeLayout(false);
@@ -492,6 +581,7 @@
 			this.gpbxGiveawaySettings.PerformLayout();
 			this.gpboxCurrentGiveawaySettings.ResumeLayout(false);
 			this.gpboxCurrentGiveawaySettings.PerformLayout();
+			this.tbPageCommands.ResumeLayout(false);
 			this.ResumeLayout(false);
 
         }
@@ -536,6 +626,15 @@
 		private System.Windows.Forms.Label lblGiveawayLengthProgress;
 		private System.Windows.Forms.CheckBox chkboxLogChatMessages;
 		private System.Windows.Forms.CheckBox chkboxPurgeNonSubsLinks;
+		private System.Windows.Forms.TextBox txtBotPassword;
+		private System.Windows.Forms.Label lblBotPassword;
+		private System.Windows.Forms.Label lblBotUsername;
+		private System.Windows.Forms.TextBox txtBotUsername;
+		private System.Windows.Forms.TabPage tbPageCommands;
+		private System.Windows.Forms.ListView lstViewCommands;
+		private System.Windows.Forms.ColumnHeader chCommand;
+		private System.Windows.Forms.ColumnHeader chDescription;
+		private System.Windows.Forms.ColumnHeader chPrivileges;
 	}
 }
 
