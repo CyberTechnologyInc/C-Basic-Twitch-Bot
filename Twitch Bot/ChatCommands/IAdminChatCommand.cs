@@ -7,9 +7,15 @@ using System.Threading.Tasks;
 namespace TwitchBot.ChatCommands {
 	public interface IAdminChatCommand : IChatCommand {
 		/// <summary>
-		/// Whether or not the bot is enabled.
-		/// If this is changed it will reflect outside.
+		/// If enabled, these commands will activate 
+		/// when called in chat regardless of bot status
 		/// </summary>
-		bool BotEnabled { get; set; }
+		bool bypassEnabledStatus { get; set; }
+
+		/// <summary>
+		/// Whether or not these commands will take priority over others.
+		/// If they do, they will be executed first.
+		/// </summary>
+		bool prioritiseCommands { get; set; }
 	}
 }
