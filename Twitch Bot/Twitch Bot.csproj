@@ -79,10 +79,12 @@
     </Compile>
     <Compile Include="ChatCommands\AdminCommands.cs" />
     <Compile Include="ChatCommands\DefaultChatCommands.cs" />
+    <Compile Include="ChatCommands\GiveawayCommands.cs" />
     <Compile Include="ChatCommands\IAdminChatCommand.cs" />
     <Compile Include="ChatCommands\IChatCommand.cs" />
+    <Compile Include="ChatCommands\ChatSettings.cs" />
+    <Compile Include="ChatCommands\SongCommands.cs" />
     <Compile Include="JSON Objects\Stream Data.cs" />
-    <Compile Include="Misc.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TwitchIRCConnection.cs" />

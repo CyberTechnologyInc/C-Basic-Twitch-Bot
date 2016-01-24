@@ -49,9 +49,6 @@
 			this.txtWelcomeMessage = new System.Windows.Forms.TextBox();
 			this.lblWelcomeMessage = new System.Windows.Forms.Label();
 			this.btnSaveSettings = new System.Windows.Forms.Button();
-			this.chkboxShowAPICode = new System.Windows.Forms.CheckBox();
-			this.lblApiCode = new System.Windows.Forms.Label();
-			this.txtAPICode = new System.Windows.Forms.TextBox();
 			this.lblChannel = new System.Windows.Forms.Label();
 			this.txtChannel = new System.Windows.Forms.TextBox();
 			this.tbPageGiveaway = new System.Windows.Forms.TabPage();
@@ -75,6 +72,7 @@
 			this.chCommand = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.chDescription = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.chPrivileges = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+			this.status = new System.Windows.Forms.StatusStrip();
 			this.TabControl1.SuspendLayout();
 			this.tbPageMain.SuspendLayout();
 			this.tbPageSettings.SuspendLayout();
@@ -176,9 +174,6 @@
 			this.tbPageSettings.Controls.Add(this.txtWelcomeMessage);
 			this.tbPageSettings.Controls.Add(this.lblWelcomeMessage);
 			this.tbPageSettings.Controls.Add(this.btnSaveSettings);
-			this.tbPageSettings.Controls.Add(this.chkboxShowAPICode);
-			this.tbPageSettings.Controls.Add(this.lblApiCode);
-			this.tbPageSettings.Controls.Add(this.txtAPICode);
 			this.tbPageSettings.Controls.Add(this.lblChannel);
 			this.tbPageSettings.Controls.Add(this.txtChannel);
 			this.tbPageSettings.Location = new System.Drawing.Point(4, 22);
@@ -309,37 +304,6 @@
 			this.btnSaveSettings.Text = "Save Settings";
 			this.btnSaveSettings.UseVisualStyleBackColor = true;
 			this.btnSaveSettings.Click += new System.EventHandler(this.btnSaveSettings_Click);
-			// 
-			// chkboxShowAPICode
-			// 
-			this.chkboxShowAPICode.AutoSize = true;
-			this.chkboxShowAPICode.Location = new System.Drawing.Point(583, 250);
-			this.chkboxShowAPICode.Name = "chkboxShowAPICode";
-			this.chkboxShowAPICode.Size = new System.Drawing.Size(15, 14);
-			this.chkboxShowAPICode.TabIndex = 4;
-			this.chkboxShowAPICode.UseVisualStyleBackColor = true;
-			this.chkboxShowAPICode.Visible = false;
-			this.chkboxShowAPICode.CheckedChanged += new System.EventHandler(this.chkboxShowAPICode_CheckedChanged);
-			// 
-			// lblApiCode
-			// 
-			this.lblApiCode.AutoSize = true;
-			this.lblApiCode.Location = new System.Drawing.Point(358, 250);
-			this.lblApiCode.Name = "lblApiCode";
-			this.lblApiCode.Size = new System.Drawing.Size(52, 13);
-			this.lblApiCode.TabIndex = 3;
-			this.lblApiCode.Text = "API Code";
-			this.lblApiCode.Visible = false;
-			// 
-			// txtAPICode
-			// 
-			this.txtAPICode.Location = new System.Drawing.Point(416, 247);
-			this.txtAPICode.Name = "txtAPICode";
-			this.txtAPICode.ReadOnly = true;
-			this.txtAPICode.Size = new System.Drawing.Size(161, 20);
-			this.txtAPICode.TabIndex = 2;
-			this.txtAPICode.UseSystemPasswordChar = true;
-			this.txtAPICode.Visible = false;
 			// 
 			// lblChannel
 			// 
@@ -534,11 +498,12 @@
             this.chCommand,
             this.chDescription,
             this.chPrivileges});
+			this.lstViewCommands.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.lstViewCommands.FullRowSelect = true;
 			this.lstViewCommands.GridLines = true;
-			this.lstViewCommands.Location = new System.Drawing.Point(0, 0);
+			this.lstViewCommands.Location = new System.Drawing.Point(3, 3);
 			this.lstViewCommands.Name = "lstViewCommands";
-			this.lstViewCommands.Size = new System.Drawing.Size(607, 300);
+			this.lstViewCommands.Size = new System.Drawing.Size(601, 294);
 			this.lstViewCommands.TabIndex = 0;
 			this.lstViewCommands.UseCompatibleStateImageBehavior = false;
 			this.lstViewCommands.View = System.Windows.Forms.View.Details;
@@ -558,11 +523,20 @@
 			this.chPrivileges.Text = "Privileges";
 			this.chPrivileges.Width = 77;
 			// 
+			// status
+			// 
+			this.status.Location = new System.Drawing.Point(0, 323);
+			this.status.Name = "status";
+			this.status.Size = new System.Drawing.Size(614, 22);
+			this.status.TabIndex = 5;
+			this.status.Text = "statusStrip1";
+			// 
 			// Bot
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(614, 325);
+			this.ClientSize = new System.Drawing.Size(614, 345);
+			this.Controls.Add(this.status);
 			this.Controls.Add(this.TabControl1);
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
 			this.Name = "Bot";
@@ -583,6 +557,7 @@
 			this.gpboxCurrentGiveawaySettings.PerformLayout();
 			this.tbPageCommands.ResumeLayout(false);
 			this.ResumeLayout(false);
+			this.PerformLayout();
 
         }
 
@@ -601,9 +576,6 @@
 		internal System.Windows.Forms.TextBox txtWelcomeMessage;
 		internal System.Windows.Forms.Label lblWelcomeMessage;
 		internal System.Windows.Forms.Button btnSaveSettings;
-		internal System.Windows.Forms.CheckBox chkboxShowAPICode;
-		internal System.Windows.Forms.Label lblApiCode;
-		internal System.Windows.Forms.TextBox txtAPICode;
 		internal System.Windows.Forms.Label lblChannel;
 		internal System.Windows.Forms.TextBox txtChannel;
 		private System.Windows.Forms.TabPage tbPageGiveaway;
@@ -635,6 +607,7 @@
 		private System.Windows.Forms.ColumnHeader chCommand;
 		private System.Windows.Forms.ColumnHeader chDescription;
 		private System.Windows.Forms.ColumnHeader chPrivileges;
+		private System.Windows.Forms.StatusStrip status;
 	}
 }
 

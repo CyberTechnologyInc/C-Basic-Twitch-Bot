@@ -153,7 +153,7 @@ namespace TwitchBot {
 						//Start point maker (activates every minute)
 						GiveawayPointAdder = new Timer();
 						GiveawayPointAdder.Interval = 1000 * 60;
-						GiveawayPointAdder.Tick += new EventHandler(Program.BotForm.addGiveawayPoints);
+						GiveawayPointAdder.Tick += new EventHandler(Program.BotForm.AddGiveawayPoints);
 						GiveawayPointAdder.Enabled = true;
 
 						send_message(Program.BotForm.txtWelcomeMessage.Text);

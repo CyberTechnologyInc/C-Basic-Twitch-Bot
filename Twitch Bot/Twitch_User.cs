@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace TwitchBot {
-	class Twitch_User {
+	public class Twitch_User {
 		public string Username { set; get; }
 		public string User_Type { set; get; }
 		public bool Sub { set; get; }

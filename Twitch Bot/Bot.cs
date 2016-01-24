@@ -21,10 +21,6 @@ namespace TwitchBot {
 
 		private WebClient wc = new WebClient();
 
-		private bool BotEnabled = true;
-
-		private Misc MiscFuncs = new Misc();
-
 		private const string LOG_PREFIX = "[TKMB]";
 
 		public Bot() {
@@ -33,7 +29,6 @@ namespace TwitchBot {
 
 		private TwitchIRCConnection ChannelConnection;
 		private TwitchIRCConnection WhisperConnection;
-		private List<IAdminChatCommand> PriorityChatCommands = new List<IAdminChatCommand>();
 		private List<IChatCommand> ChatCommands = new List<IChatCommand>();
 		
 		private void AddCommandToList(string command, string description, string privileges) {
@@ -46,25 +41,25 @@ namespace TwitchBot {
 
 		//Think of a good way of setting up commands...
 		private void SetupCommands() {
-			//Implement a way to iterate all chat commands with one loop.
-			foreach(var itm in PriorityChatCommands) {
-				itm.Initialise();
-			}
-
-			foreach(var itm in ChatCommands) {
-				itm.Initialise();
-			}
-
-			//Load all commands into the commands listview
-			foreach(var itm in PriorityChatCommands) {
-				for(int i = 0; i < itm.commands.Length; i++) {
-					AddCommandToList(itm.commands[i], itm.descriptions[i], itm.privileges[i]);
+			//Sort commands so that admin commands or the most important ones come first.
+			for(int i = 0; i<ChatCommands.Count; i++) {
+				//Prevent casting twice
+				var itm = ChatCommands[i];
+				var adminCMD = itm as IAdminChatCommand;
+				if(adminCMD != null) {
+					//Only prioritise if it has been initially enabled
+					if(adminCMD.prioritiseCommands) {
+						ChatCommands.Remove(itm);
+						ChatCommands.Insert(0, itm);
+					}
 				}
 			}
 
+			//Add commands to list
+			//TODO: make these commands save somehow, then be editable within the commands view.
 			foreach(var itm in ChatCommands) {
-				for(int i = 0; i < itm.commands.Length; i++) {
-					AddCommandToList(itm.commands[i], itm.descriptions[i], itm.privileges[i]);
+				for(int i = 0; i < itm.commands.Count; i++) {
+					AddCommandToList(itm.commands[i][0], itm.commands[i][1], itm.commands[i][2]);
 				}
 			}
 		}
@@ -72,19 +67,18 @@ namespace TwitchBot {
 		private void Bot_Load(object sender, EventArgs e) {
 			wc.Proxy = null;
 
-			SetupCommands();
+			Program.giveawayPointsFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "points.txt");
+			Program.loginSettingsFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "login.txt");
+			Program.settingsDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
 
-			//Add all chat commands
-			//Add priority commands
-			PriorityChatCommands.Add(new AdminCommands());
-			
-			//New method of adding chat commands
+			//Add commands
+			ChatCommands.Add(new AdminCommands());
 			ChatCommands.Add(new DefaultChatCommands());
+			ChatCommands.Add(new SongCommands());
+			ChatCommands.Add(new GiveawayCommands());
 
+			//Setup prioritisation and add commands to the command list
 			SetupCommands();
-
-			//Set instance
-			MiscFuncs.BotForm = this;
 
 			if(File.Exists(settingsFile)) {
 				Settings.LoadSettings(settingsFile);
@@ -92,10 +86,23 @@ namespace TwitchBot {
 			}
 
 			//Setup connections to IRC servers
+
+			ChatSettings.Channel = txtChannel.Text;
+
 			//Setup connection to normal chat
 			ChannelConnection = new TwitchIRCConnection("irc.twitch.tv", txtChannel.Text, txtBotUsername.Text, txtBotPassword.Text);
 			//Setup connection to be able to whisper to users
 			WhisperConnection = new TwitchIRCConnection("199.9.253.119", txtChannel.Text, txtBotUsername.Text, txtBotPassword.Text);
+
+
+			GiveawayAddPointsTimer = new Timer();
+			GiveawayAddPointsTimer.Interval = 60*1000;
+
+			GiveawayAddPointsTimer.Tick += (sen, ev) => {
+				AddGiveawayPoints(sen, ev);
+			};
+
+			GiveawayAddPointsTimer.Enabled = true;
 
 			if(chkboxAutoStart.Checked) {
 				cmdStartBot.PerformClick();
@@ -175,6 +182,7 @@ namespace TwitchBot {
 		}
 
 		private void LoadSettings() {
+			//TODO: Use generics in settings manager in order to not cast every single thing
 			//Bot connection details
 			txtBotUsername.Text = (string)Settings.GetSetting("bot_username");
 			txtBotPassword.Text = (string)Settings.GetSetting("bot_password");
@@ -254,6 +262,7 @@ namespace TwitchBot {
 
 		#endregion "Save/Load Settings"
 
+		//TODO: Work on cooldown system. Implement it into the new command system
 		#region "Cooldown system"
 
 		private double unixTimestamp() {
@@ -411,44 +420,54 @@ namespace TwitchBot {
 							}
 						}
 					}
-				} else {
 				}
 
-				//Deal with priority commands
-				foreach(var processor in PriorityChatCommands) {
-					//if(processor.commands) {
-						if(sender.Username.ToLower() == ChannelConnection.get_channel(false).ToLower() || sender.Username == "ManselD") {
-							object[] response = processor.ProcessCommand(sender.Username, userMessage);
-							if(response != null) {
-								BotEnabled = processor.BotEnabled;
+				if(msg[0] == "!help" || msg[0] == "!commands"){
+					StringBuilder sb = new StringBuilder();
+					sb.Append("Here is a full list of commands: ");
+					for(int i = 0; i < ChatCommands.Count; i++) {
+						for(int cmdI = 0; cmdI < ChatCommands[i].commands.Count; cmdI++){
+							sb.Append(ChatCommands[i].commands[cmdI][0] + ", ");
+                        }
+					}
 
-								if(Convert.ToBoolean(response[0])) {
-									ChannelConnection.send_message((string)response[1]);
-								} else {
-									WhisperConnection.send_message((string)response[1]);
-								}
-
-								return;
-							}
-						}
-					//}
+					string completeData = sb.ToString().Trim();
+					completeData = completeData.Remove(completeData.Length - 1);
+                    ChannelConnection.send_message(completeData);
+					return;
 				}
 
-				//Don't process any other commands if the bot has been turned off through chat.
-				if(BotEnabled) {
-					foreach(var processor in ChatCommands) {
-						object[] response = processor.ProcessCommand(sender.Username, userMessage);
-						if(response != null) {
-							if(Convert.ToBoolean(response[0])) {
-								ChannelConnection.send_message((string)response[1]);
-							} else {
-								WhisperConnection.send_message((string)response[1]);
+				//If it's an admin command and bypassEnabledStatus is true, process command regardless of the bot's enabled status.
+				//Otherwise, respect the status.
+				bool sendViaChat;
+				string returnMessage;
+				foreach(var processor in ChatCommands) {
+					processor.ProcessCommand(sender, msg, out sendViaChat, out returnMessage);
+					if(returnMessage != null) {
+						var adminCMD = processor as IAdminChatCommand;
+						if(adminCMD != null) {
+							if(adminCMD.bypassEnabledStatus) {
+								ProcessCommandData(sendViaChat, returnMessage);
+								break;
 							}
-
-							return;
+						} else {
+							if(ChatSettings.BotEnabled) {
+								ProcessCommandData(sendViaChat, returnMessage, sender.Username);
+								break;
+							}
 						}
+
+						return;
 					}
 				}
+			}
+		}
+
+		private void ProcessCommandData(bool sendViaChat, string message, string username = "") {
+			if(sendViaChat) {
+				ChannelConnection.send_message(message);
+			} else {
+				WhisperConnection.send_message(message);
 			}
 		}
 
@@ -552,9 +571,9 @@ namespace TwitchBot {
 
 		private delegate void addGiveawayPointsInvoker(object s, EventArgs e);
 
-		public void addGiveawayPoints(object s, EventArgs e) {
+		public void AddGiveawayPoints(object s, EventArgs e) {
 			if(this.InvokeRequired) {
-				this.Invoke(new addGiveawayPointsInvoker(addGiveawayPoints), s, e);
+				this.Invoke(new addGiveawayPointsInvoker(AddGiveawayPoints), s, e);
 			} else {
 				try {
 					var twitchDL = new WebClient();
@@ -575,7 +594,8 @@ namespace TwitchBot {
 			}
 		}
 
-		private bool GiveawayActive = false;
+		public bool GiveawayActive = false;
+		private Timer GiveawayAddPointsTimer;
 		private Timer GiveawayTimer;
 		private Timer GiveawayLengthProgressTimer;
 		private double GiveawayFinishTime;
@@ -607,7 +627,7 @@ namespace TwitchBot {
 
 		public delegate void addGiveawayUserToListInvoker(string user);
 
-		private void addGiveawayUserToList(string user) {
+		public void addGiveawayUserToList(string user) {
 			if(this.InvokeRequired) {
 				this.Invoke(new addGiveawayUserToListInvoker(addGiveawayUserToList), user);
 			} else {
@@ -722,13 +742,7 @@ namespace TwitchBot {
 			}
 		}
 
-		private void chkboxShowAPICode_CheckedChanged(object sender, EventArgs e) {
-			if(chkboxShowAPICode.Checked) {
-				txtAPICode.UseSystemPasswordChar = false;
-			} else {
-				txtAPICode.UseSystemPasswordChar = true;
-			}
-		}
+		
 
 		private void chkboxLogChatMessages_CheckedChanged(object sender, EventArgs e) {
 			if(chkboxLogChatMessages.Checked) {
