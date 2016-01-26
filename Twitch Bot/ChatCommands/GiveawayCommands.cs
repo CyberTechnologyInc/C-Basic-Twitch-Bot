@@ -8,37 +8,28 @@ namespace TwitchBot.ChatCommands {
 	internal class GiveawayCommands : IChatCommand {
 
 		//Commands, description, privileges
-		private List<string[]> _commands = new List<string[]> { new string[] { "!enter", "Adds a user into the giveaway", "" },
-		new string[] { "!points", "Shows the user's current points", ""},
-		new string[] { "!toppoints", "Gets the user with the highest amount of points", ""},
-		new string[] { "!give", "Transfer points to another user", "" } };
 
-		public List<string[]> commands {
-			get {
-				return _commands;
-			}
+		public List<string[]> Commands { get; set; } = new List<string[]> { new string[] { "!enter", "Adds a user into the giveaway", "" },
+			new string[] { "!points", "Shows the user's current points", ""},
+			new string[] { "!toppoints", "Gets the user with the highest amount of points", ""},
+			new string[] { "!give", "Transfer points to another user", "" } };
 
-			set {
-				_commands = value;
-			}
-		}
-
-		public void ProcessCommand(Twitch_User user, string[] command, out bool sendViaChat, out string message) {
+		public void ProcessCommand(TwitchUser user, string[] command, out bool sendViaChat, out string message) {
 			sendViaChat = true;
-			if(File.Exists(Program.giveawayPointsFile)) {
-				if(command[0] == commands[0][0]) {
+			if(File.Exists(Program.GiveawayPointsFile)) {
+				if(command[0] == Commands[0][0]) {
 					//Enter into giveaway
 					if(Program.BotForm.GiveawayActive) {
-						Program.BotForm.addGiveawayUserToList(user.Username);
+						Program.BotForm.AddGiveawayUserToList(user.Username);
 						message = user.Username + " has been added into the giveaway.";
 						return;
 					} else {
 						message = null;
 						return;
 					}
-				} else if(command[0] == commands[1][0]) {
+				} else if(command[0] == Commands[1][0]) {
 					//Show amount of points the user has.
-					var docTwo = XDocument.Load(Program.giveawayPointsFile);
+					var docTwo = XDocument.Load(Program.GiveawayPointsFile);
 					var points = new Int64();
 					foreach(XElement el in docTwo.Element("Users").Elements()) {
 						if(el.Element("Username").Value == user.Username.ToLower()) {
@@ -49,11 +40,11 @@ namespace TwitchBot.ChatCommands {
 
 					message = user.Username + " has " + points + " points.";
 					return;
-				} else if(command[0] == commands[2][0]) {
+				} else if(command[0] == Commands[2][0]) {
 					//Get the user with the most points.
 					var topUser = "";
 					var topPoints = new Int64();
-					var doc = XDocument.Load(Program.giveawayPointsFile);
+					var doc = XDocument.Load(Program.GiveawayPointsFile);
 					foreach(XElement el in doc.Element("Users").Elements()) {
 						if(topUser == "") {
 							topUser = el.Element("Username").Value;
@@ -68,17 +59,17 @@ namespace TwitchBot.ChatCommands {
 
 					message = topUser + " currently has the most points with " + topPoints + " points.";
 					return;
-				} else if(command[0] == commands[3][0]) {
+				} else if(command[0] == Commands[3][0]) {
 					try {
 						message = null;
 
 						//!givepoints name amount
-						if(!(command[1] is string) || command[1] == null) {
+						if(command[1] != null) {
 							return;
 						}
 
 						var givenPoints = Math.Abs(Int64.Parse(command[2]));
-						var docThree = XDocument.Load(Program.giveawayPointsFile);
+						var docThree = XDocument.Load(Program.GiveawayPointsFile);
 						var canAfford = false;
 						foreach(XElement el in docThree.Element("Users").Elements()) {
 							if(el.Element("Username").Value == user.Username.ToLower()) {
@@ -106,7 +97,7 @@ namespace TwitchBot.ChatCommands {
 								}
 							}
 							//ChannelConnection.send_message(sender + " has given " + givenPoints + " points to " + msg[1] + "!");
-							docThree.Save(Program.giveawayPointsFile);
+							docThree.Save(Program.GiveawayPointsFile);
 							return;
 						} else {
 							message = user.Username + ", you can't afford that you dirty peasant!";

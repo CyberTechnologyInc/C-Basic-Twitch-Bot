@@ -5,22 +5,13 @@ namespace TwitchBot.ChatCommands {
 
 	internal class DefaultChatCommands : IChatCommand {
 		//Commands, description, privileges
-		private List<string[]> _commands = new List<string[]> { new string[] { "!labrats", "Gives credit to all of the testers of the bot", "" },
-		new string[] { "!credits", "Gives credits to the maker of the bot", ""},
-		new string[] { "!song", "Shows the song currently playing", "" } };
 
-		public List<string[]> commands {
-			get {
-				return _commands;
-			}
-
-			set {
-				_commands = value;
-			}
-		}
+		public List<string[]> Commands { get; set; } = new List<string[]> { new string[] { "!labrats", "Gives credit to all of the testers of the bot", "" },
+			new string[] { "!credits", "Gives credits to the maker of the bot", ""},
+			new string[] { "!song", "Shows the song currently playing", "" } };
 
 		//TODO: Work out a better way to send over other details that are required for some functionality.
-		public void ProcessCommand(Twitch_User user, string[] command, out bool sendViaChat, out string message) {
+		public void ProcessCommand(TwitchUser user, string[] command, out bool sendViaChat, out string message) {
 			//If the bot is disabled
 			if(!ChatSettings.BotEnabled) {
 				sendViaChat = false;
@@ -29,16 +20,16 @@ namespace TwitchBot.ChatCommands {
 			}
 
 			sendViaChat = true;
-			foreach(var cmds in commands) {
-				if(command[0] == commands[0][0]) {
+			foreach(var cmds in Commands) {
+				if(command[0] == Commands[0][0]) {
 					//Credit testers
 					message = "Thank the lab rats Itzkydvil and Poul76 for testing this bot!";
 					return;
-				} else if(command[0] == commands[1][0]) {
+				} else if(command[0] == Commands[1][0]) {
 					//Credit creator
 					message = "This bot was made by ManselD! :D";
 					return;
-				} else if(command[0] == commands[2][0]) {
+				} else if(command[0] == Commands[2][0]) {
 					//Retrieve troll song
 					string[] songList = { "https://www.youtube.com/watch?v=z6qaO-vX080", "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "https://www.youtube.com/watch?v=oT3mCybbhf0" };
 					var rnd = new Random();

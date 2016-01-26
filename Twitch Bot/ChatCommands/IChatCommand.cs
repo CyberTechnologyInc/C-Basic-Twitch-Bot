@@ -9,13 +9,13 @@ namespace TwitchBot.ChatCommands {
 		/// <summary>
 		/// A list of all commands and their descriptions and privileges
 		/// </summary>
-		List<string[]> commands { get; set; }
+		List<string[]> Commands { get; set; }
 
 		/// <summary>
 		/// Add a new chat command
 		/// </summary>
 		/// <param name="user">The user object</param>
 		/// <param name="command">The chat message (in it's entirety) that was sent to execute said command</param>
-		void ProcessCommand(Twitch_User user, string[] command, out bool sendViaChat, out string message);
+		void ProcessCommand(TwitchUser user, string[] command, out bool sendViaChat, out string message);
 	}
 }

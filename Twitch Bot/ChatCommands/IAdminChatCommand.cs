@@ -10,12 +10,12 @@ namespace TwitchBot.ChatCommands {
 		/// If enabled, these commands will activate 
 		/// when called in chat regardless of bot status
 		/// </summary>
-		bool bypassEnabledStatus { get; set; }
+		bool BypassEnabledStatus { get; set; }
 
 		/// <summary>
 		/// Whether or not these commands will take priority over others.
 		/// If they do, they will be executed first.
 		/// </summary>
-		bool prioritiseCommands { get; set; }
+		bool PrioritiseCommands { get; set; }
 	}
 }

@@ -5,15 +5,15 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace TwitchBot {
-	public class Twitch_User {
+	public class TwitchUser {
 		public string Username { set; get; }
-		public string User_Type { set; get; }
+		public string UserType { set; get; }
 		public bool Sub { set; get; }
 
-		public Twitch_User(string _Username, string _User_Type, bool _Sub) {
-			Username = _Username;
-			User_Type = _User_Type;
-			Sub = _Sub;
+		public TwitchUser(string username, string userType, bool sub) {
+			Username = username;
+			UserType = userType;
+			Sub = sub;
 		}
 	}
 }

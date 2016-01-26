@@ -6,11 +6,11 @@ namespace TwitchBot {
 		public static Bot BotForm { get; set; }
 
 		public static double CurrentVersion { get; private set; }
-		public static string APICode { get; set; }
+		public static string ApiCode { get; set; }
 		public static string Username { get; set; }
-		public static string settingsDirectory;
-		public static string loginSettingsFile;
-		public static string giveawayPointsFile;
+		public static string SettingsDirectory;
+		public static string LoginSettingsFile;
+		public static string GiveawayPointsFile;
 
 		/// <summary>
 		/// The main entry point for the application.

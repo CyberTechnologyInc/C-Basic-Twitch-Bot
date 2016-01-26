@@ -7,50 +7,50 @@ using System.Windows.Forms;
 
 namespace TwitchBot {
 
-	internal class TwitchIRCConnection {
-		private TcpClient Client = new TcpClient();
-		private NetworkStream Stream;
-		private byte[] DataBuffer = new byte[1024];
-		private int port = 6667;
+	internal class TwitchIrcConnection {
+		private TcpClient _client = new TcpClient();
+		private NetworkStream _stream;
+		private byte[] _dataBuffer = new byte[1024];
+		private int _port = 6667;
 
-		private Timer GiveawayPointAdder;
+		private Timer _giveawayPointAdder;
 
-		public string CON_IP { get; private set; }
-		public string CON_Username { get; private set; }
-		public string CON_Password { get; private set; }
-		public string CON_Channel { get; private set; }
+		public string ConIp { get; private set; }
+		public string ConUsername { get; private set; }
+		public string ConPassword { get; private set; }
+		public string ConChannel { get; private set; }
 		public bool Connected { get; private set; }
 
-		public TwitchIRCConnection(string IP, string channel, string user, string pass) {
-			CON_IP = IP;
-			CON_Channel = channel;
-			CON_Username = user;
-			CON_Password = pass;
+		public TwitchIrcConnection(string ip, string channel, string user, string pass) {
+			ConIp = ip;
+			ConChannel = channel;
+			ConUsername = user;
+			ConPassword = pass;
 			Connected = false;
 		}
 
 		#region "Misc"
 
 		public string get_channel(bool addHashtag = false) {
-			if(CON_Channel.Substring(0, 1) == "#") {
+			if(ConChannel.Substring(0, 1) == "#") {
 				if(addHashtag) {
 					return Program.BotForm.txtChannel.Text.ToLower();
 				} else {
-					return Program.BotForm.txtChannel.Text.Substring(1, CON_Channel.Length - 1).ToLower();
+					return Program.BotForm.txtChannel.Text.Substring(1, ConChannel.Length - 1).ToLower();
 				}
 			} else {
 				if(addHashtag) {
-					return "#" + CON_Channel.ToLower();
+					return "#" + ConChannel.ToLower();
 				} else {
-					return CON_Channel.ToLower();
+					return ConChannel.ToLower();
 				}
 			}
 		}
 
-		public Twitch_User get_sender(string msg) {
+		public TwitchUser get_sender(string msg) {
 			//This could probably be made faster, will do it soon.
 			//Gather all of the user's data (everything before a space), which is concatenated together with ;
-			Twitch_User TwitchUser;
+			TwitchUser twitchUser;
 			string name = "";
 			bool sub = false;
 			string moderator = "";
@@ -73,71 +73,71 @@ namespace TwitchBot {
 				moderator = (arr.ContainsKey("user-type")) ? arr["user-type"] : "";
 
 			} catch(Exception ex) {
-				Program.BotForm.logMessage("Error: " + ex.ToString());
+				Program.BotForm.LogMessage("Error: " + ex.ToString());
 			}
-			TwitchUser = new Twitch_User(name, moderator, sub);
-			return TwitchUser;
+			twitchUser = new TwitchUser(name, moderator, sub);
+			return twitchUser;
 		}
 
 		public void send_data(byte[] data) {
-			if(!Client.Connected) { return; }
-			Stream.Write(data, 0, data.Length);
-			Stream.Flush();
+			if(!_client.Connected) { return; }
+			_stream.Write(data, 0, data.Length);
+			_stream.Flush();
 		}
 
 		public void send_message(string msg) {
 			string data = "PRIVMSG " + get_channel(true) + " :" + msg + Environment.NewLine;
 			send_data(Encoding.UTF8.GetBytes(data));
-			Program.BotForm.logMessage("Sent message: " + msg);
+			Program.BotForm.LogMessage("Sent message: " + msg);
 		}
 
 		public void send_pass() {
-			string data = "PASS " + CON_Password + Environment.NewLine;
+			string data = "PASS " + ConPassword + Environment.NewLine;
 			send_data(Encoding.UTF8.GetBytes(data));
-			Program.BotForm.logMessage("Sent password to authenticate");
+			Program.BotForm.LogMessage("Sent password to authenticate");
 		}
 
 		public void send_nick() {
-			string data = "NICK " + CON_Username + Environment.NewLine;
+			string data = "NICK " + ConUsername + Environment.NewLine;
 			send_data(Encoding.UTF8.GetBytes(data));
-			Program.BotForm.logMessage("Sent nick to authenticate: " + CON_Username);
+			Program.BotForm.LogMessage("Sent nick to authenticate: " + ConUsername);
 		}
 
 		public void join_channel() {
 			string data = "JOIN " + get_channel(true) + Environment.NewLine;
 			send_data(Encoding.UTF8.GetBytes(data));
-			Program.BotForm.logMessage("Sent request to join channel: " + get_channel(true));
+			Program.BotForm.LogMessage("Sent request to join channel: " + get_channel(true));
 		}
 
 		public void disconnect_channel() {
 			string data = "PART " + get_channel(true) + Environment.NewLine;
 			send_data(Encoding.UTF8.GetBytes(data));
-			Program.BotForm.logMessage("Disconnected from channel: " + get_channel(true));
+			Program.BotForm.LogMessage("Disconnected from channel: " + get_channel(true));
 		}
 
 		#endregion "Misc"
 
 		public void ConnectToServer() {
 			try {
-				if(!Client.Connected) {
-					Client = new TcpClient();
+				if(!_client.Connected) {
+					_client = new TcpClient();
 					int attemptNum = 1;
-					Program.BotForm.logMessage("Connecting to host " + CON_IP + ", attempt " + attemptNum + ".");
-					while(!Client.Connected) {
-						Client.Connect(CON_IP, port);
+					Program.BotForm.LogMessage("Connecting to host " + ConIp + ", attempt " + attemptNum + ".");
+					while(!_client.Connected) {
+						_client.Connect(ConIp, _port);
 						System.Threading.Thread.Sleep(250);
 						attemptNum += 1;
 					}
 
-					if(Client.Connected) {
-						Stream = Client.GetStream();
+					if(_client.Connected) {
+						_stream = _client.GetStream();
 
 						//Start to read data received from the network connection.
-						Stream.BeginRead(DataBuffer, 0, DataBuffer.Length, receiveData, null);
+						_stream.BeginRead(_dataBuffer, 0, _dataBuffer.Length, ReceiveData, null);
 
-						Program.BotForm.logMessage("Connected to " + CON_IP + " on port " + port);
+						Program.BotForm.LogMessage("Connected to " + ConIp + " on port " + _port);
 
-						Program.BotForm.logMessage("Attempting to authenticate " + CON_Username + " on " + get_channel(true));
+						Program.BotForm.LogMessage("Attempting to authenticate " + ConUsername + " on " + get_channel(true));
 
 						send_pass();
 						send_nick();
@@ -151,10 +151,10 @@ namespace TwitchBot {
 						Connected = true;
 
 						//Start point maker (activates every minute)
-						GiveawayPointAdder = new Timer();
-						GiveawayPointAdder.Interval = 1000 * 60;
-						GiveawayPointAdder.Tick += new EventHandler(Program.BotForm.AddGiveawayPoints);
-						GiveawayPointAdder.Enabled = true;
+						_giveawayPointAdder = new Timer();
+						_giveawayPointAdder.Interval = 1000 * 60;
+						_giveawayPointAdder.Tick += new EventHandler(Program.BotForm.AddGiveawayPoints);
+						_giveawayPointAdder.Enabled = true;
 
 						send_message(Program.BotForm.txtWelcomeMessage.Text);
 					}
@@ -162,22 +162,22 @@ namespace TwitchBot {
 					Disconnect();
 				}
 			} catch(Exception ex) {
-				Program.BotForm.logMessage("An error has occured: " + ex.ToString());
+				Program.BotForm.LogMessage("An error has occured: " + ex.ToString());
 			}
 		}
 
 		public void Disconnect() {
 			send_message(Program.BotForm.txtLeavingMessage.Text);
 			Connected = false;
-			Client.Close();
-			Stream.Close();
+			_client.Close();
+			_stream.Close();
 			disconnect_channel();
-			GiveawayPointAdder.Enabled = false;
+			_giveawayPointAdder.Enabled = false;
 		}
 
-		public void receiveData(IAsyncResult ar) {
+		public void ReceiveData(IAsyncResult ar) {
 			try {
-				int length = Stream.EndRead(ar);
+				int length = _stream.EndRead(ar);
 			} catch(ObjectDisposedException) {
 				return;
 			}
@@ -188,12 +188,12 @@ namespace TwitchBot {
 				while(true) {
 					//If we want to close the connection, stop reading from the stream so that it can be ended.
 					if(!Connected) {
-						Stream.EndRead(ar);
+						_stream.EndRead(ar);
 						break;
 					}
 
-					Stream.Read(DataBuffer, 0, DataBuffer.Length);
-					message = Encoding.UTF8.GetString(DataBuffer).Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries)[0];
+					_stream.Read(_dataBuffer, 0, _dataBuffer.Length);
+					message = Encoding.UTF8.GetString(_dataBuffer).Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries)[0];
 
 					if(message.Length >= 1) {
 
@@ -201,10 +201,10 @@ namespace TwitchBot {
 
 						//Process PING/PONG or send data to main form for processing
 						if(arr[0] == "PING") {
-							Program.BotForm.logMessage("Received PING, sending PONG to " + CON_IP);
-							send_data(Encoding.UTF8.GetBytes("PONG " + CON_IP + Environment.NewLine));
+							Program.BotForm.LogMessage("Received PING, sending PONG to " + ConIp);
+							send_data(Encoding.UTF8.GetBytes("PONG " + ConIp + Environment.NewLine));
 						} else {
-							Program.BotForm.ReceiveData(message, CON_IP);
+							Program.BotForm.ReceiveData(message, ConIp);
 						}
 					}
 				}
@@ -212,7 +212,7 @@ namespace TwitchBot {
 			} catch(System.IO.IOException) { 
 
 			} catch(Exception ex) {
-				Program.BotForm.logMessage("Error: " + ex.ToString());
+				Program.BotForm.LogMessage("Error: " + ex.ToString());
 			} finally {
 				//If the bot should be connected but error'd out, reconnect.
 				if(Connected) {

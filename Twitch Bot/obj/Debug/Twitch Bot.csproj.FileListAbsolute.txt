@@ -9,3 +9,28 @@ C:\Users\CyberTechnologyInc\Documents\GitHub\C-Basic-Twitch-Bot\Twitch Bot\bin\D
 C:\Users\CyberTechnologyInc\Documents\GitHub\C-Basic-Twitch-Bot\Twitch Bot\bin\Debug\Newtonsoft.Json.dll
 C:\Users\CyberTechnologyInc\Documents\GitHub\C-Basic-Twitch-Bot\Twitch Bot\bin\Debug\Newtonsoft.Json.xml
 C:\Users\CyberTechnologyInc\Documents\GitHub\C-Basic-Twitch-Bot\Twitch Bot\obj\Debug\TopKekMemeBot.Properties.Resources.resources
+C:\Users\CyberTechnologyInc\Desktop\C-Basic-Twitch-Bot-master\Twitch Bot\bin\Debug\TopKekMemeBot.exe.config
+C:\Users\CyberTechnologyInc\Desktop\C-Basic-Twitch-Bot-master\Twitch Bot\bin\Debug\TopKekMemeBot.exe
+C:\Users\CyberTechnologyInc\Desktop\C-Basic-Twitch-Bot-master\Twitch Bot\bin\Debug\TopKekMemeBot.pdb
+C:\Users\CyberTechnologyInc\Desktop\C-Basic-Twitch-Bot-master\Twitch Bot\bin\Debug\Newtonsoft.Json.dll
+C:\Users\CyberTechnologyInc\Desktop\C-Basic-Twitch-Bot-master\Twitch Bot\bin\Debug\Newtonsoft.Json.xml
+C:\Users\CyberTechnologyInc\Desktop\C-Basic-Twitch-Bot-master\Twitch Bot\obj\Debug\Twitch Bot.csprojResolveAssemblyReference.cache
+C:\Users\CyberTechnologyInc\Desktop\C-Basic-Twitch-Bot-master\Twitch Bot\obj\Debug\TopKekMemeBot.Bot.resources
+C:\Users\CyberTechnologyInc\Desktop\C-Basic-Twitch-Bot-master\Twitch Bot\obj\Debug\TopKekMemeBot.Properties.Resources.resources
+C:\Users\CyberTechnologyInc\Desktop\C-Basic-Twitch-Bot-master\Twitch Bot\obj\Debug\Twitch Bot.csproj.GenerateResource.Cache
+C:\Users\CyberTechnologyInc\Desktop\C-Basic-Twitch-Bot-master\Twitch Bot\obj\Debug\TopKekMemeBot.exe
+C:\Users\CyberTechnologyInc\Desktop\C-Basic-Twitch-Bot-master\Twitch Bot\obj\Debug\TopKekMemeBot.pdb
+C:\Users\CyberTechnologyInc\Desktop\C-Basic-Twitch-Bot-master\Twitch Bot\bin\Debug\CTI.SimpleSettings.dll
+C:\Users\CyberTechnologyInc\Desktop\C-Basic-Twitch-Bot-master\Twitch Bot\bin\Debug\CTI.SimpleSettings.pdb
+C:\Users\CyberTechnologyInc\Documents\Visual Studio 2015\Projects\C#\Twitch Bot\Twitch Bot\bin\Debug\Newtonsoft.Json.dll
+C:\Users\CyberTechnologyInc\Documents\Visual Studio 2015\Projects\C#\Twitch Bot\Twitch Bot\bin\Debug\CTI.SimpleSettings.pdb
+C:\Users\CyberTechnologyInc\Documents\Visual Studio 2015\Projects\C#\Twitch Bot\Twitch Bot\bin\Debug\Newtonsoft.Json.xml
+C:\Users\CyberTechnologyInc\Documents\Visual Studio 2015\Projects\C#\Twitch Bot\Twitch Bot\obj\Debug\Twitch Bot.csprojResolveAssemblyReference.cache
+C:\Users\CyberTechnologyInc\Documents\Visual Studio 2015\Projects\C#\Twitch Bot\Twitch Bot\obj\Debug\Twitch Bot.csproj.GenerateResource.Cache
+C:\Users\CyberTechnologyInc\Documents\Visual Studio 2015\Projects\C#\Twitch Bot\Twitch Bot\bin\Debug\Twitch Bot.exe.config
+C:\Users\CyberTechnologyInc\Documents\Visual Studio 2015\Projects\C#\Twitch Bot\Twitch Bot\obj\Debug\TwitchBot.Bot.resources
+C:\Users\CyberTechnologyInc\Documents\Visual Studio 2015\Projects\C#\Twitch Bot\Twitch Bot\obj\Debug\TwitchBot.Properties.Resources.resources
+C:\Users\CyberTechnologyInc\Documents\Visual Studio 2015\Projects\C#\Twitch Bot\Twitch Bot\bin\Debug\Twitch Bot.exe
+C:\Users\CyberTechnologyInc\Documents\Visual Studio 2015\Projects\C#\Twitch Bot\Twitch Bot\bin\Debug\Twitch Bot.pdb
+C:\Users\CyberTechnologyInc\Documents\Visual Studio 2015\Projects\C#\Twitch Bot\Twitch Bot\obj\Debug\Twitch Bot.exe
+C:\Users\CyberTechnologyInc\Documents\Visual Studio 2015\Projects\C#\Twitch Bot\Twitch Bot\obj\Debug\Twitch Bot.pdb
