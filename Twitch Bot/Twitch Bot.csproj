@@ -78,12 +78,28 @@
       <DependentUpon>Bot.cs</DependentUpon>
     </Compile>
     <Compile Include="ChatCommands\AdminCommands.cs" />
+    <Compile Include="ChatCommands\CommandManager.cs" />
     <Compile Include="ChatCommands\DefaultChatCommands.cs" />
-    <Compile Include="ChatCommands\GiveawayCommands.cs" />
+    <Compile Include="ChatCommands\FunCommands.cs" />
+    <Compile Include="ChatCommands\Giveaway\GiveawayCommands.cs" />
+    <Compile Include="ChatCommands\Giveaway\Misc.cs" />
     <Compile Include="ChatCommands\IAdminChatCommand.cs" />
     <Compile Include="ChatCommands\IChatCommand.cs" />
     <Compile Include="ChatCommands\ChatSettings.cs" />
     <Compile Include="ChatCommands\SongCommands.cs" />
+    <Compile Include="Forms\FrmAddCommand.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FrmAddCommand.Designer.cs">
+      <DependentUpon>FrmAddCommand.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FrmEditCommand.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FrmEditCommand.Designer.cs">
+      <DependentUpon>FrmEditCommand.cs</DependentUpon>
+    </Compile>
+    <Compile Include="GlobalFunctions.cs" />
     <Compile Include="JSON Objects\Stream Data.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -91,6 +107,12 @@
     <Compile Include="Twitch_User.cs" />
     <EmbeddedResource Include="Bot.resx">
       <DependentUpon>Bot.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\FrmAddCommand.resx">
+      <DependentUpon>FrmAddCommand.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\FrmEditCommand.resx">
+      <DependentUpon>FrmEditCommand.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -130,6 +152,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="bin\Debug\TLDS.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -1,8 +1,8 @@
 ﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Text;
 using System.Windows.Forms;
@@ -10,6 +10,8 @@ using System.Xml.Linq;
 using TwitchBot.JSON_Objects;
 using TwitchBot.ChatCommands;
 using CTI.SimpleSettings;
+using TwitchBot.ChatCommands.Giveaway;
+using TwitchBot.Forms;
 
 namespace TwitchBot {
 
@@ -17,112 +19,103 @@ namespace TwitchBot {
 		//private Dictionary<string, double> cooldownList = new Dictionary<string, double>();
 		//private Dictionary<string, string> commandList = new Dictionary<string, string>();
 
-		private readonly SettingsManager _settings = new SettingsManager();
+		private readonly SettingsManager settings = new SettingsManager();
 
-		private readonly WebClient _wc = new WebClient();
-
-		private const string LogPrefix = "[TKMB]";
+		private const string LOG_PREFIX = "[TKMB]";
 
 		public Bot() {
 			InitializeComponent();
 		}
 
-		private TwitchIrcConnection _channelConnection;
-		private TwitchIrcConnection _whisperConnection;
-		private readonly List<IChatCommand> _chatCommands = new List<IChatCommand>();
-		
-		private void AddCommandToList(string command, string description, string privileges)
-		{
-			var lvi = new ListViewItem{
-				Text = command
-			};
-
-			lvi.SubItems.Add(description);
-			lvi.SubItems.Add(privileges);
-			lstViewCommands.Items.Add(lvi);
-		}
+		private TwitchIrcConnection channelConnection;
+		private TwitchIrcConnection whisperConnection;
+		private readonly List<IChatCommand> chatCommands = new List<IChatCommand>();
 
 		//Think of a good way of setting up commands...
 		private void SetupCommands() {
+			//Load existing commands
+			CommandManager.LoadCommands();
+
 			//Sort commands so that admin commands or the most important ones come first.
-			for(var i = 0; i<_chatCommands.Count; i++) {
+			for(var i = 0; i<chatCommands.Count; i++) {
 				//Prevent casting twice
-				var itm = _chatCommands[i];
+				var itm = chatCommands[i];
 				var adminCmd = itm as IAdminChatCommand;
 				if (adminCmd != null && adminCmd.PrioritiseCommands){
-					_chatCommands.Remove(itm);
-					_chatCommands.Insert(0, itm);
+					chatCommands.Remove(itm);
+					chatCommands.Insert(0, itm);
 				}
 			}
 
-			//Add commands to list
-			//TODO: make these commands save somehow, then be editable within the commands view.
-			foreach(var itm in _chatCommands) {
-				foreach (var cmd in itm.Commands){
-					AddCommandToList(cmd[0], cmd[1], cmd[2]);
+			//Add commands to list in the CommandManager
+			foreach(var itm in chatCommands) {
+				foreach(var cmd in itm.Commands) {
+					//If the command isn't already in the list add it to the list
+					if(CommandManager.commands.All(f => f.Name != cmd[0])) {
+						CommandManager.AddCommand(new CommandData { Name = cmd[0], Enabled = true, Description = cmd[1], Privileges = cmd[2].Split(' ') });
+					}
 				}
 			}
+
+			//Update list of commands
+			CommandManager.UpdateCommandList();
 		}
 
 		private void Bot_Load(object sender, EventArgs e) {
-			_wc.Proxy = null;
-
 			Program.GiveawayPointsFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "points.txt");
 			Program.LoginSettingsFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "login.txt");
 			Program.SettingsDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
 
+			//Setup connections to IRC servers
+			ChatSettings.Channel = txtChannel.Text;
+
 			//Add commands
-			_chatCommands.Add(new AdminCommands());
-			_chatCommands.Add(new DefaultChatCommands());
-			_chatCommands.Add(new SongCommands());
-			_chatCommands.Add(new GiveawayCommands());
+			chatCommands.Add(new AdminCommands());
+			chatCommands.Add(new DefaultChatCommands());
+			chatCommands.Add(new SongCommands());
+			chatCommands.Add(new GiveawayCommands());
 
 			//Setup prioritisation and add commands to the command list
 			SetupCommands();
 
-			if(File.Exists(_settingsFile)) {
-				_settings.LoadSettings(_settingsFile);
+			if(File.Exists(settingsFile)) {
+				settings.LoadSettings(settingsFile);
 				LoadSettings();
 			}
 
-			//Setup connections to IRC servers
-			ChatSettings.Channel = txtChannel.Text;
-
 			//Setup connection to normal chat
-			_channelConnection = new TwitchIrcConnection("irc.twitch.tv", txtChannel.Text, txtBotUsername.Text, txtBotPassword.Text);
+			channelConnection = new TwitchIrcConnection("irc.twitch.tv", txtChannel.Text, txtBotUsername.Text, txtBotPassword.Text);
 			//Setup connection to be able to whisper to users
-			_whisperConnection = new TwitchIrcConnection("199.9.253.119", txtChannel.Text, txtBotUsername.Text, txtBotPassword.Text);
+			whisperConnection = new TwitchIrcConnection("199.9.253.119", txtChannel.Text, txtBotUsername.Text, txtBotPassword.Text);
 
-
-			_giveawayAddPointsTimer = new Timer();
-			_giveawayAddPointsTimer.Interval = 60*1000;
-
-			_giveawayAddPointsTimer.Tick += AddGiveawayPoints;
-
-			_giveawayAddPointsTimer.Enabled = true;
+			giveawayAddPointsTimer = new Timer {
+				Interval = 60 * 1000,
+				Enabled = true
+			};
+			giveawayAddPointsTimer.Tick += AddGiveawayPoints;
 
 			if(chkboxAutoStart.Checked) {
 				cmdStartBot.PerformClick();
 			}
 		}
 
-		private bool _botEnabledSwitch = false;
+		private bool botEnabledSwitch = false;
 
 		private void cmdStartBot_Click(object sender, EventArgs e) {
-			if(_botEnabledSwitch) {
-				_botEnabledSwitch = false;
-				_channelConnection.Disconnect();
-				_whisperConnection.Disconnect();
+			if(botEnabledSwitch) {
+				botEnabledSwitch = false;
+				channelConnection.Disconnect();
+				whisperConnection.Disconnect();
 				cmdStartBot.Text = "Start";
 			} else {
-				_botEnabledSwitch = true;
-				_channelConnection.ConnectToServer();
-				_whisperConnection.ConnectToServer();
+				botEnabledSwitch = true;
+				channelConnection.ConnectToServer();
+				whisperConnection.ConnectToServer();
 				cmdStartBot.Text = "Stop";
 			}
 		}
 
-		private readonly string _settingsFile = Application.StartupPath + "\\config.xml";
+		private readonly string settingsFile = Application.StartupPath + @"\config.xml";
 		#region "Save/Load Settings"
 
 		/*
@@ -159,43 +152,44 @@ namespace TwitchBot {
 
 		private void SaveSettings() {
 			//Bot connection details
-			_settings.AddSetting("bot_username", txtBotUsername.Text);
-			_settings.AddSetting("bot_password", txtBotPassword.Text);
-			_settings.AddSetting("channel", txtChannel.Text);
+			settings.AddSetting("bot_username", txtBotUsername.Text);
+			settings.AddSetting("bot_password", txtBotPassword.Text);
+			settings.AddSetting("channel", txtChannel.Text);
 
 			//General bot settings
-			_settings.AddSetting("auto_start_bot", chkboxAutoStart.Checked);
-			_settings.AddSetting("command_cooldown", txtCooldownTime.Text);
-			_settings.AddSetting("welcome_message", txtWelcomeMessage.Text);
-			_settings.AddSetting("leaving_message", txtLeavingMessage.Text);
-			_settings.AddSetting("purge_non_sub_links", chkboxPurgeNonSubsLinks.Checked);
-			_settings.AddSetting("log_chat_messages", chkboxLogChatMessages.Checked);
+			settings.AddSetting("auto_start_bot", chkboxAutoStart.Checked);
+			settings.AddSetting("command_cooldown", txtCooldownTime.Text);
+			settings.AddSetting("welcome_message", txtWelcomeMessage.Text);
+			settings.AddSetting("leaving_message", txtLeavingMessage.Text);
+			settings.AddSetting("purge_non_sub_links", chkboxPurgeNonSubsLinks.Checked);
+			settings.AddSetting("log_chat_messages", chkboxLogChatMessages.Checked);
 
 			//Giveaway settings
-			_settings.AddSetting("giveaway_points_per_minute", txtGiveawayPointsEarnedPerX.Text);
+			settings.AddSetting("giveaway_points_per_minute", txtGiveawayPointsEarnedPerX.Text);
 			//Settings.AddSetting("giveaway_enter_command", txt.Text);
 
 			//Save all settings that have been added
-			_settings.SaveSettings(_settingsFile);
+			settings.SaveSettings(settingsFile);
 		}
 
 		private void LoadSettings() {
 			//TODO: Use generics in settings manager in order to not cast every single thing
+			//Does that logic even make sense? I don't even know.
 			//Bot connection details
-			txtBotUsername.Text = (string)_settings.GetSetting("bot_username");
-			txtBotPassword.Text = (string)_settings.GetSetting("bot_password");
-			txtChannel.Text = (string)_settings.GetSetting("channel");
+			txtBotUsername.Text = (string)settings.GetSetting("bot_username");
+			txtBotPassword.Text = (string)settings.GetSetting("bot_password");
+			txtChannel.Text = (string)settings.GetSetting("channel");
 
 			//General bot settings
-			chkboxAutoStart.Checked = GetBool(_settings.GetSetting("auto_start_bot").ToString());
-            txtCooldownTime.Text = (string)_settings.GetSetting("command_cooldown");
-            txtWelcomeMessage.Text = (string)_settings.GetSetting("welcome_message");
-			txtLeavingMessage.Text = (string)_settings.GetSetting("leaving_message");
-			chkboxLogChatMessages.Checked = GetBool(_settings.GetSetting("log_chat_messages").ToString());
-			chkboxPurgeNonSubsLinks.Checked = GetBool(_settings.GetSetting("purge_non_sub_links").ToString());
+			chkboxAutoStart.Checked = GetBool(settings.GetSetting("auto_start_bot").ToString());
+            txtCooldownTime.Text = (string)settings.GetSetting("command_cooldown");
+            txtWelcomeMessage.Text = (string)settings.GetSetting("welcome_message");
+			txtLeavingMessage.Text = (string)settings.GetSetting("leaving_message");
+			chkboxLogChatMessages.Checked = GetBool(settings.GetSetting("log_chat_messages").ToString());
+			chkboxPurgeNonSubsLinks.Checked = GetBool(settings.GetSetting("purge_non_sub_links").ToString());
 
 			//Giveaway settings
-			txtGiveawayPointsEarnedPerX.Text = (string)_settings.GetSetting("giveaway_points_per_minute");
+			txtGiveawayPointsEarnedPerX.Text = (string)settings.GetSetting("giveaway_points_per_minute");
         }
 
 		private void chkboxAutoStart_CheckedChanged(object sender, EventArgs e) {
@@ -308,7 +302,7 @@ namespace TwitchBot {
 				*/
 		#endregion "Cooldown system"
 
-		private double UnixTimestamp() {
+		private static double UnixTimestamp() {
 			return (DateTime.Now - new DateTime(1970, 1, 1, 0, 0, 0, 0)).TotalSeconds;
 		}
 
@@ -326,19 +320,18 @@ namespace TwitchBot {
 			toolTip1.SetToolTip(txtLeavingMessage, "Enter the message that you want the bot to say when it leaves the chat.");
 		}
 
-		public StreamData StreamData = new StreamData();
+		public StreamData streamData = new StreamData();
 
 		public void ReceiveData(string message, string ip) {
-			var userMessage = string.Empty;
-			string[] arr = message.Split(' ');
+			var arr = message.Split(' ');
 
 			//logMessage("Received: " + message);
 
 			if(arr[2] == "PRIVMSG") {
-				var sender = _channelConnection.get_sender(message);
-				var weirdString = _channelConnection.get_channel(true) + " :";
+				var sender = channelConnection.get_sender(message);
+				var weirdString = channelConnection.get_channel(true) + " :";
 				//StringComparison.Ordinal is good for comparing English words and provides better speed efficiency.
-				userMessage = message.Substring(message.IndexOf(weirdString, StringComparison.Ordinal));
+				var userMessage = message.Substring(message.IndexOf(weirdString, StringComparison.Ordinal));
 				userMessage = userMessage.Remove(0, weirdString.Length);
 				var msg = userMessage.Split(' ');
 
@@ -349,7 +342,7 @@ namespace TwitchBot {
 
 				//Purge non-sub links (Moderator exception)
 				if(chkboxPurgeNonSubsLinks.Checked) {
-					if(_channelConnection.get_channel(false) != sender.Username.ToLower()) {
+					if(channelConnection.get_channel(false) != sender.Username.ToLower()) {
 						if(sender.UserType != "mod") {
 							if(!sender.Sub) {
 								foreach(var potentialUrl in msg) {
@@ -372,8 +365,8 @@ namespace TwitchBot {
 									}
 
 									if(illegal) {
-										_channelConnection.send_message("/timeout " + sender.Username + " 1");
-										_channelConnection.send_message("Naughty " + sender.Username + ", only subs can link!");
+										channelConnection.send_message("/timeout " + sender.Username + " 1");
+										channelConnection.send_message("Naughty " + sender.Username + ", only subs can link!");
 										break;
 									}
 								}
@@ -385,163 +378,110 @@ namespace TwitchBot {
 				if(msg[0] == "!help" || msg[0] == "!commands"){
 					var sb = new StringBuilder();
 					sb.Append("Here is a full list of commands: ");
-					foreach (var chatCommands in _chatCommands) {
-						foreach (var cmd in chatCommands.Commands){
+					foreach (var processor in chatCommands) {
+						foreach (var cmd in processor.Commands){
 							sb.Append(cmd[0] + ", ");
 						}
 					}
 
 					var completeData = sb.ToString().Trim();
 					completeData = completeData.Remove(completeData.Length - 1);
-                    _channelConnection.send_message(completeData);
+                    channelConnection.send_message(completeData);
 					return;
 				}
 
 				//If it's an admin command and bypassEnabledStatus is true, process command regardless of the bot's enabled status.
 				//Otherwise, respect the status.
-				foreach(var processor in _chatCommands) {
-					bool sendViaChat;
-					string returnMessage;
-					processor.ProcessCommand(sender, msg, out sendViaChat, out returnMessage);
-					if(returnMessage != null) {
-						var adminCmd = processor as IAdminChatCommand;
-						if(adminCmd != null) {
-							if(adminCmd.BypassEnabledStatus) {
-								ProcessCommandData(sendViaChat, returnMessage);
-								break;
+
+				//First check if the command exists (instead of looping through all of the command processors - wasting time)
+				var curCommand = CommandManager.GetCommandData(msg[0]);
+				if(curCommand != null) {
+					if(curCommand.Enabled) {
+						if(curCommand.CustomReply == null) {
+							foreach(var processor in chatCommands) {
+								bool sendViaChat;
+								string returnMessage;
+								processor.ProcessCommand(sender, msg, out sendViaChat, out returnMessage);
+								if(returnMessage != null) {
+									var adminCmd = processor as IAdminChatCommand;
+									if(adminCmd != null) {
+										if(adminCmd.BypassEnabledStatus) {
+											ProcessCommandData(sendViaChat, returnMessage);
+											break;
+										}
+									} else {
+										if(ChatSettings.BotEnabled) {
+											ProcessCommandData(sendViaChat, returnMessage);
+											break;
+										}
+									}
+
+									return;
+								}
 							}
 						} else {
-							if(ChatSettings.BotEnabled) {
-								ProcessCommandData(sendViaChat, returnMessage, sender.Username);
-								break;
-							}
+							//Process custom command
+							ProcessCommandData(curCommand.SendViaChat, curCommand);
 						}
-
-						return;
 					}
 				}
 			}
 		}
 
-		private void ProcessCommandData(bool sendViaChat, string message, string username = "") {
+		private void ProcessCommandData(bool sendViaChat, string message) {
 			if(sendViaChat) {
-				_channelConnection.send_message(message);
+				channelConnection.send_message(message);
 			} else {
-				_whisperConnection.send_message(message);
+				whisperConnection.send_message(message);
 			}
+		}
+
+		private void ProcessCommandData(bool sendViaChat, CommandData command) {
+			if(command != null) {
+				var messageToSend = command.CustomReply;
+				foreach(var variable in command.Variables) {
+					var replaceStr = "{" + variable.Name + (variable.Increment ? "++" : "--") + "}";
+                    if(variable.Increment) {	
+						variable.Value += 1;
+					} else {
+						variable.Value -= 1;
+					}
+
+					messageToSend = messageToSend.Replace(replaceStr, variable.Value.ToString());
+				}
+
+				//Use the command data in order to generate a custom reply
+                if(sendViaChat) {
+					channelConnection.send_message(messageToSend);
+				} else {
+					whisperConnection.send_message(messageToSend);
+				}
+			}
+
+			//CommandManager.SaveCommand(command);
+			CommandManager.AddCommand(command);
 		}
 
 		#region "Giveaway"
 
-		public class GiveawayLinks {
-		}
-
-		public class GiveawayChatters {
-			public List<object> Moderators { get; set; }
-			public List<object> Staff { get; set; }
-			public List<object> Admins { get; set; }
-			public List<object> GlobalMods { get; set; }
-			public List<string> Viewers { get; set; }
-		}
-
-		public class GiveawayTwitchData {
-			public GiveawayLinks Links { get; set; }
-			public int ChatterCount { get; set; }
-			public GiveawayChatters Chatters { get; set; }
-		}
-
-		private bool RemovePoints(string user, int points) {
-			if(File.Exists(Program.GiveawayPointsFile)) {
-				var doc = XDocument.Load(Program.GiveawayPointsFile);
-				var removedPoints = false;
-				foreach(var el in doc.Element("Users").Elements()) {
-					if(el.Element("Username").Value == user) {
-						var curPoints = Convert.ToInt64(el.Element("Points").Value);
-						if(curPoints >= points) {
-							var newPoints = curPoints - points;
-							var newUser = new XElement("User",
-							  new XElement("Username", user),
-							  new XElement("Points", newPoints));
-							el.ReplaceWith(newUser);
-							doc.Save(Program.GiveawayPointsFile);
-							removedPoints = true;
-							break;
-						} else {
-							break;
-						}
-					}
-				}
-
-				return removedPoints;
-			} else {
-				return false;
-			}
-		}
-
-		private void AddPoints(string user, long points) {
-			if(File.Exists(Program.GiveawayPointsFile)) {
-				var doc = XDocument.Load(Program.GiveawayPointsFile);
-
-				var userInFile = false;
-				foreach(var el in doc.Element("Users").Elements()) {
-					var curUser = el.Element("Username").Value;
-					if(curUser == user) {
-						userInFile = true;
-						break;
-					}
-				}
-
-				if(userInFile) {
-					//Update existing user's points
-					foreach(var el in doc.Element("Users").Elements()) {
-						if(el.Element("Username").Value == user) {
-							points = points + Convert.ToInt64(el.Element("Points").Value);
-							var newUser = new XElement("User",
-							  new XElement("Username", user),
-							  new XElement("Points", points));
-							el.ReplaceWith(newUser);
-							break;
-						}
-					}
-				} else {
-					//Add new user
-					var newUser = new XElement("User",
-							  new XElement("Username", user),
-							  new XElement("Points", points));
-					doc.Element("Users").Add(newUser);
-				}
-				doc.Save(Program.GiveawayPointsFile);
-			} else {
-				var doc = new XDocument(
-					new XElement("Users",
-						new XElement("User",
-							new XElement("Username", user),
-							new XElement("Points", points)
-						)
-					)
-				);
-				doc.Save(Program.GiveawayPointsFile);
-			}
-		}
-
 		private delegate void AddGiveawayPointsInvoker(object s, EventArgs e);
 
 		public void AddGiveawayPoints(object s, EventArgs e) {
-			if(this.InvokeRequired) {
-				this.Invoke(new AddGiveawayPointsInvoker(AddGiveawayPoints), s, e);
+			if(InvokeRequired) {
+				Invoke(new AddGiveawayPointsInvoker(AddGiveawayPoints), s, e);
 			} else {
 				try {
 					var twitchDl = new WebClient();
-					var data = twitchDl.DownloadString("http://tmi.twitch.tv/group/user/" + _channelConnection.get_channel() + "/chatters");
-					var json = JsonConvert.DeserializeObject<GiveawayTwitchData>(data);
+					var data = twitchDl.DownloadString("http://tmi.twitch.tv/group/user/" + channelConnection.get_channel() + "/chatters");
+					var json = JsonConvert.DeserializeObject<Misc.GiveawayTwitchData>(data);
 					//Add points to the moderators
 					foreach(string user in json.Chatters.Moderators) {
-						AddPoints(user, Convert.ToInt64(txtGiveawayPointsEarnedPerX.Text));
+						Misc.AddPoints(user, Convert.ToInt64(txtGiveawayPointsEarnedPerX.Text));
 					}
 
 					//Add points to the viewers
-					foreach(string user in json.Chatters.Viewers) {
-						AddPoints(user, Convert.ToInt64(txtGiveawayPointsEarnedPerX.Text));
+					foreach(var user in json.Chatters.Viewers) {
+						Misc.AddPoints(user, Convert.ToInt64(txtGiveawayPointsEarnedPerX.Text));
 					}
 				} catch(Exception) {
 					//MessageBox.Show(ex.ToString());
@@ -549,108 +489,112 @@ namespace TwitchBot {
 			}
 		}
 
-		public bool GiveawayActive;
-		private Timer _giveawayAddPointsTimer;
-		private Timer _giveawayTimer;
-		private Timer _giveawayLengthProgressTimer;
-		private double _giveawayFinishTime;
-		private double _giveawayTotalLength;
+		public bool giveawayActive;
+		private Timer giveawayAddPointsTimer;
+		private Timer giveawayTimer;
+		private Timer giveawayLengthProgressTimer;
+		private double giveawayFinishTime;
+		private double giveawayTotalLength;
 
 		private void cmdGiveawayStart_Click(object sender, EventArgs e) {
-			if(!GiveawayActive) {
+			if(!giveawayActive && channelConnection.Users.Count > 1) {
 				//If a giveaway isn't currently hapenning.
-				_giveawayTotalLength = Convert.ToInt16(txtGiveawayLength.Text) * 60;
-				_giveawayFinishTime = UnixTimestamp() + _giveawayTotalLength;
+				giveawayTotalLength = Convert.ToInt16(txtGiveawayLength.Text) * 60;
+				giveawayFinishTime = UnixTimestamp() + giveawayTotalLength;
 				lblGiveawayLengthProgress.Visible = true;
 
-				GiveawayActive = true;
-				_giveawayTimer = new Timer{
+				giveawayActive = true;
+				giveawayTimer = new Timer{
 					Interval = Convert.ToInt16(txtGiveawayLength.Text)*1000*60,
 					Enabled = true
 				};
-				_giveawayTimer.Tick += GiveawayTimerFinished;
+				giveawayTimer.Tick += GiveawayTimerFinished;
 
 				//Report back on progress every second.
-				_giveawayLengthProgressTimer = new Timer{
+				giveawayLengthProgressTimer = new Timer{
 					Interval = 1000,
 					Enabled = true
 				};
-				_giveawayLengthProgressTimer.Tick += GiveawayLengthProgressReport;
+				giveawayLengthProgressTimer.Tick += GiveawayLengthProgressReport;
 
-				lblGiveawayProgress.Text = "A giveaway has been started. Entered users: " + giveawayEnteredUsers.Items.Count + ".";
-				_channelConnection.send_message("A giveaway has started for " + txtGiveawayAmountOfGiveawayItems.Text + " item(s). This will last " + txtGiveawayLength.Text + " minutes. If you have " + txtGiveawayPointsRequired.Text + " points type !enter to enter the giveaway.");
+				lblGiveawayProgress.Text = @"A giveaway has been started. Entered users: " + giveawayEnteredUsers.Items.Count + @".";
+				channelConnection.send_message("A giveaway has started for " + txtGiveawayAmountOfGiveawayItems.Text + " item(s). This will last " + txtGiveawayLength.Text + " minutes. If you have " + txtGiveawayPointsRequired.Text + " points type !enter to enter the giveaway.");
 			}
 		}
 
 		public delegate void AddGiveawayUserToListInvoker(string user);
-
 		public void AddGiveawayUserToList(string user) {
 			if(this.InvokeRequired) {
 				this.Invoke(new AddGiveawayUserToListInvoker(AddGiveawayUserToList), user);
 			} else {
 				giveawayEnteredUsers.Items.Add(user);
 				if(giveawayEnteredUsers.Items.Count >= 1) {
-					lblGiveawayProgress.Text = "A giveaway has been started. Entered users: " + giveawayEnteredUsers.Items.Count + ".";
+					lblGiveawayProgress.Text = @"A giveaway has been started. Entered users: " + giveawayEnteredUsers.Items.Count + @".";
 				}
 			}
 		}
 
 		private delegate void GiveawayTimerFinishedInvoke(object s, EventArgs e);
 
-		private readonly List<string> _giveawayWinners = new List<string>();
+		private readonly List<string> giveawayWinners = new List<string>();
 
 		private void GiveawayTimerFinished(object s, EventArgs e) {
 			if(this.InvokeRequired) {
 				this.Invoke(new GiveawayTimerFinishedInvoke(GiveawayTimerFinished), s, e);
 			} else {
-				if(GiveawayActive) {
-					//Determine winner
-					LogMessage("Giveaway has just finished at " + DateTime.Now);
-					GiveawayActive = false;
-					_giveawayTimer.Enabled = false;
-					_giveawayLengthProgressTimer.Enabled = false;
+				if(giveawayActive) {
+					if(channelConnection.Users.Count > 1) {
+						//Determine winner
+						LogMessage("Giveaway has just finished at " + DateTime.Now);
+						giveawayActive = false;
+						giveawayTimer.Enabled = false;
+						giveawayLengthProgressTimer.Enabled = false;
 
-					if(giveawayEnteredUsers.Items.Count >= 1) {
-						var giveawayItems = Convert.ToInt32(txtGiveawayAmountOfGiveawayItems.Text);
-						var rand = new Random();
-						for(int i = 0; i < giveawayItems; i++) {
-							var user = giveawayEnteredUsers.Items[rand.Next(0, giveawayEnteredUsers.Items.Count)].ToString();
-							while(_giveawayWinners.Contains(user)) {
-								user = giveawayEnteredUsers.Items[rand.Next(0, giveawayEnteredUsers.Items.Count)].ToString();
-							}
-
-							_giveawayWinners.Add(user);
-						}
-
-						if(_giveawayWinners.Count > 1) {
-							var winnerMsg = "The giveaway has finished. The winners are... ";
-							foreach(string winner in _giveawayWinners) {
-								//If it's the last winner, don't add a comma at the end, add a period.
-								if(winner == _giveawayWinners[_giveawayWinners.Count - 1]) {
-									winnerMsg += " and " + winner + ".";
-								} else {
-									winnerMsg += " " + winner + ",";
+						if(giveawayEnteredUsers.Items.Count >= 1) {
+							var giveawayItems = Convert.ToInt32(txtGiveawayAmountOfGiveawayItems.Text);
+							var rand = new Random();
+							for(var i = 0; i < giveawayItems; i++) {
+								var user = giveawayEnteredUsers.Items[rand.Next(0, giveawayEnteredUsers.Items.Count)].ToString();
+								while(giveawayWinners.Contains(user)) {
+									user = giveawayEnteredUsers.Items[rand.Next(0, giveawayEnteredUsers.Items.Count)].ToString();
 								}
+
+								giveawayWinners.Add(user);
 							}
-							_channelConnection.send_message(winnerMsg + " Congratulations, the winners will get their prize(s) shortly.");
-							lblGiveawayProgress.Text = "A giveaway has finished, the winners were: " + winnerMsg;
-							_whisperConnection.send_message("/w " + _whisperConnection.get_channel(false) + " A giveaway has finished, the winners were: " + winnerMsg);
+
+							if(giveawayWinners.Count > 1) {
+								var winnerMsg = "The giveaway has finished. The winners are... ";
+								foreach(var winner in giveawayWinners) {
+									//If it's the last winner, don't add a comma at the end, add a period.
+									if(winner == giveawayWinners[giveawayWinners.Count - 1]) {
+										winnerMsg += " and " + winner + ".";
+									} else {
+										winnerMsg += " " + winner + ",";
+									}
+								}
+								channelConnection.send_message(winnerMsg + " Congratulations, the winners will get their prize(s) shortly.");
+								lblGiveawayProgress.Text = @"A giveaway has finished, the winners were: " + winnerMsg;
+								whisperConnection.send_message("/w " + whisperConnection.get_channel(false) + " A giveaway has finished, the winners were: " + winnerMsg);
+							} else {
+								channelConnection.send_message("The giveaway has finished. The winner is " + giveawayWinners[0] + ", congratulations! You will get your prize(s) soon!");
+								lblGiveawayProgress.Text = @"A giveaway has finished, the winner was: " + giveawayWinners[0];
+								whisperConnection.send_message("/w " + whisperConnection.get_channel(false) + " A giveaway has finished, the winner was: " + giveawayWinners[0]);
+							}
 						} else {
-							_channelConnection.send_message("The giveaway has finished. The winner is " + _giveawayWinners[0] + ", congratulations! You will get your prize(s) soon!");
-							lblGiveawayProgress.Text = "A giveaway has finished, the winner was: " + _giveawayWinners[0];
-							_whisperConnection.send_message("/w " + _whisperConnection.get_channel(false) + " A giveaway has finished, the winner was: " + _giveawayWinners[0]);
+							channelConnection.send_message("Not enough people entered the giveaway so there was no winner.");
+							lblGiveawayProgress.Text = @"A giveaway has finished with no winner.";
 						}
+
+						//Hide giveaway length
+						lblGiveawayLengthProgress.Visible = false;
+
+						//Clear entered users and winners list.
+						giveawayEnteredUsers.Items.Clear();
+						giveawayWinners.Clear();
 					} else {
-						_channelConnection.send_message("Not enough people entered the giveaway so there was no winner.");
-						lblGiveawayProgress.Text = "A giveaway has finished with no winner.";
+						channelConnection.send_message("Not enough people entered the giveaway so there was no winner.");
+						lblGiveawayProgress.Text = @"A giveaway has finished with no winner.";
 					}
-
-					//Hide giveaway length
-					lblGiveawayLengthProgress.Visible = false;
-
-					//Clear entered users and winners list.
-					giveawayEnteredUsers.Items.Clear();
-					_giveawayWinners.Clear();
 				}
 			}
 		}
@@ -661,8 +605,8 @@ namespace TwitchBot {
 			if(this.InvokeRequired) {
 				this.Invoke(new GiveawayLengthProgressReportInvoke(GiveawayLengthProgressReport), s, e);
 			} else {
-				var curTimeLeft = Math.Round(_giveawayFinishTime - UnixTimestamp());
-				lblGiveawayLengthProgress.Text = curTimeLeft + " seconds left on giveaway.";
+				var curTimeLeft = Math.Round(giveawayFinishTime - UnixTimestamp());
+				lblGiveawayLengthProgress.Text = curTimeLeft + @" seconds left on giveaway.";
 			}
 		}
 
@@ -688,27 +632,78 @@ namespace TwitchBot {
 		}
 
 		private void cmdSendCommand_Click(object sender, EventArgs e) {
-			if(!(txtCommand.Text == "")) {
+			if(txtCommand.Text != "") {
 				if(txtCommand.Text.StartsWith("/w ")) {
-					_whisperConnection.send_message(txtCommand.Text);
+					whisperConnection.send_message(txtCommand.Text);
 					txtCommand.Clear();
 				} else {
-					_channelConnection.send_message(txtCommand.Text);
+					channelConnection.send_message(txtCommand.Text);
 					txtCommand.Clear();
 				}
 			}
 		}
 
-		
-
 		private void chkboxLogChatMessages_CheckedChanged(object sender, EventArgs e) {
 			if(chkboxLogChatMessages.Checked) {
-				LogMessage(LogPrefix + " Chat logging has been enabled.");
+				LogMessage(LOG_PREFIX + " Chat logging has been enabled.");
 			} else {
-				LogMessage(LogPrefix + " Chat logging has been disabled.");
+				LogMessage(LOG_PREFIX + " Chat logging has been disabled.");
 			}
 		}
 
 		#endregion "Misc"
+
+		private void addCommandToolStripMenuItem_Click(object sender, EventArgs e) {
+			var frm = new FrmAddCommand();
+			frm.Show();
+		}
+
+		private void editToolStripMenuItem_Click(object sender, EventArgs e) {
+			if(lstViewCommands.SelectedItems.Count > 0) {
+				var frm = new FrmEditCommand();
+				frm.Show();
+
+				var lvi = lstViewCommands.SelectedItems[0];
+
+				//Command, enabled, description, privileges
+				frm.txtCommand.Text = lvi.Text;
+				frm.chkEnabled.Checked = CommandManager.YesNoToBool(lvi.SubItems[1].Text);
+				frm.txtDescription.Text = lvi.SubItems[2].Text;
+				frm.txtPrivileges.Text = lvi.SubItems[3].Text;
+			}
+		}
+
+		private void enableDisableToolStripMenuItem_Click(object sender, EventArgs e) {
+			if(lstViewCommands.SelectedItems.Count > 1) {
+				foreach(ListViewItem itm in lstViewCommands.SelectedItems) {
+					SwapCommandEnabledStatus(itm);
+                }
+			} else {
+				SwapCommandEnabledStatus(lstViewCommands.SelectedItems[0]);
+			}
+
+			CommandManager.SaveCommands();
+        }
+
+		private static void SwapCommandEnabledStatus(ListViewItem itm) {
+			//Swap the value of its current status (Yes = No, No = Yes)
+			itm.SubItems[1].Text = itm.SubItems[1].Text == "Yes" ? "No" : "Yes";
+			var curCmd = CommandManager.GetCommandData(itm.SubItems[0].Text);
+			curCmd.Enabled = CommandManager.YesNoToBool(itm.SubItems[1].Text);
+			CommandManager.AddCommand(curCmd);
+		}
+
+		private void removeCommandToolStripMenuItem_Click(object sender, EventArgs e) {
+			if(lstViewCommands.SelectedItems.Count > 1) {
+				foreach(ListViewItem itm in lstViewCommands.SelectedItems) {
+					CommandManager.RemoveCommand(itm.SubItems[0].Text);
+				}
+			} else if(lstViewCommands.SelectedItems.Count == 1) {
+				CommandManager.RemoveCommand(lstViewCommands.SelectedItems[0].SubItems[0].Text);
+			}
+
+			CommandManager.UpdateCommandList();
+			CommandManager.SaveCommands();
+		}
 	}
 }

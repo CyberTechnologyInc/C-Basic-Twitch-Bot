@@ -16,6 +16,8 @@ namespace TwitchBot.ChatCommands {
 		/// </summary>
 		/// <param name="user">The user object</param>
 		/// <param name="command">The chat message (in it's entirety) that was sent to execute said command</param>
+		/// <param name="sendViaChat">Should the command be sent via chat or whisper</param>
+		/// <param name="message">The message that should be sent back to the stream</param>
 		void ProcessCommand(TwitchUser user, string[] command, out bool sendViaChat, out string message);
 	}
 }

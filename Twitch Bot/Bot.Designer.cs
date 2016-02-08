@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+			this.components = new System.ComponentModel.Container();
 			this.TabControl1 = new System.Windows.Forms.TabControl();
 			this.tbPageMain = new System.Windows.Forms.TabPage();
 			this.txtCommand = new System.Windows.Forms.TextBox();
@@ -70,9 +71,15 @@
 			this.tbPageCommands = new System.Windows.Forms.TabPage();
 			this.lstViewCommands = new System.Windows.Forms.ListView();
 			this.chCommand = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+			this.chEnabled = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.chDescription = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.chPrivileges = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-			this.status = new System.Windows.Forms.StatusStrip();
+			this.chCustomReply = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+			this.cntxtMnuCommands = new System.Windows.Forms.ContextMenuStrip(this.components);
+			this.addCommandToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.enableDisableToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.removeCommandToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.TabControl1.SuspendLayout();
 			this.tbPageMain.SuspendLayout();
 			this.tbPageSettings.SuspendLayout();
@@ -81,6 +88,7 @@
 			this.gpbxGiveawaySettings.SuspendLayout();
 			this.gpboxCurrentGiveawaySettings.SuspendLayout();
 			this.tbPageCommands.SuspendLayout();
+			this.cntxtMnuCommands.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// TabControl1
@@ -93,7 +101,7 @@
 			this.TabControl1.Multiline = true;
 			this.TabControl1.Name = "TabControl1";
 			this.TabControl1.SelectedIndex = 0;
-			this.TabControl1.Size = new System.Drawing.Size(615, 326);
+			this.TabControl1.Size = new System.Drawing.Size(877, 326);
 			this.TabControl1.TabIndex = 4;
 			// 
 			// tbPageMain
@@ -106,7 +114,7 @@
 			this.tbPageMain.Location = new System.Drawing.Point(4, 22);
 			this.tbPageMain.Name = "tbPageMain";
 			this.tbPageMain.Padding = new System.Windows.Forms.Padding(3);
-			this.tbPageMain.Size = new System.Drawing.Size(607, 300);
+			this.tbPageMain.Size = new System.Drawing.Size(869, 300);
 			this.tbPageMain.TabIndex = 0;
 			this.tbPageMain.Text = "Main";
 			this.tbPageMain.UseVisualStyleBackColor = true;
@@ -115,7 +123,7 @@
 			// 
 			this.txtCommand.Location = new System.Drawing.Point(87, 275);
 			this.txtCommand.Name = "txtCommand";
-			this.txtCommand.Size = new System.Drawing.Size(428, 20);
+			this.txtCommand.Size = new System.Drawing.Size(694, 20);
 			this.txtCommand.TabIndex = 4;
 			this.txtCommand.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtCommand_KeyDown);
 			// 
@@ -135,13 +143,13 @@
 			this.logs.HorizontalScrollbar = true;
 			this.logs.Location = new System.Drawing.Point(6, 6);
 			this.logs.Name = "logs";
-			this.logs.Size = new System.Drawing.Size(509, 264);
+			this.logs.Size = new System.Drawing.Size(775, 264);
 			this.logs.TabIndex = 0;
 			// 
 			// chkboxAutoStart
 			// 
 			this.chkboxAutoStart.AutoSize = true;
-			this.chkboxAutoStart.Location = new System.Drawing.Point(521, 35);
+			this.chkboxAutoStart.Location = new System.Drawing.Point(787, 35);
 			this.chkboxAutoStart.Name = "chkboxAutoStart";
 			this.chkboxAutoStart.Size = new System.Drawing.Size(73, 30);
 			this.chkboxAutoStart.TabIndex = 2;
@@ -151,7 +159,7 @@
 			// 
 			// cmdStartBot
 			// 
-			this.cmdStartBot.Location = new System.Drawing.Point(521, 6);
+			this.cmdStartBot.Location = new System.Drawing.Point(787, 6);
 			this.cmdStartBot.Name = "cmdStartBot";
 			this.cmdStartBot.Size = new System.Drawing.Size(77, 23);
 			this.cmdStartBot.TabIndex = 1;
@@ -179,7 +187,7 @@
 			this.tbPageSettings.Location = new System.Drawing.Point(4, 22);
 			this.tbPageSettings.Name = "tbPageSettings";
 			this.tbPageSettings.Padding = new System.Windows.Forms.Padding(3);
-			this.tbPageSettings.Size = new System.Drawing.Size(607, 300);
+			this.tbPageSettings.Size = new System.Drawing.Size(869, 300);
 			this.tbPageSettings.TabIndex = 1;
 			this.tbPageSettings.Text = "Settings";
 			this.tbPageSettings.UseVisualStyleBackColor = true;
@@ -244,7 +252,7 @@
 			// 
 			// txtLeavingMessage
 			// 
-			this.txtLeavingMessage.Location = new System.Drawing.Point(432, 72);
+			this.txtLeavingMessage.Location = new System.Drawing.Point(399, 72);
 			this.txtLeavingMessage.Multiline = true;
 			this.txtLeavingMessage.Name = "txtLeavingMessage";
 			this.txtLeavingMessage.Size = new System.Drawing.Size(146, 60);
@@ -254,7 +262,7 @@
 			// lblLeavingMessage
 			// 
 			this.lblLeavingMessage.AutoSize = true;
-			this.lblLeavingMessage.Location = new System.Drawing.Point(328, 72);
+			this.lblLeavingMessage.Location = new System.Drawing.Point(295, 72);
 			this.lblLeavingMessage.Name = "lblLeavingMessage";
 			this.lblLeavingMessage.Size = new System.Drawing.Size(91, 13);
 			this.lblLeavingMessage.TabIndex = 10;
@@ -279,7 +287,7 @@
 			// 
 			// txtWelcomeMessage
 			// 
-			this.txtWelcomeMessage.Location = new System.Drawing.Point(433, 6);
+			this.txtWelcomeMessage.Location = new System.Drawing.Point(400, 6);
 			this.txtWelcomeMessage.Multiline = true;
 			this.txtWelcomeMessage.Name = "txtWelcomeMessage";
 			this.txtWelcomeMessage.Size = new System.Drawing.Size(146, 60);
@@ -289,7 +297,7 @@
 			// lblWelcomeMessage
 			// 
 			this.lblWelcomeMessage.AutoSize = true;
-			this.lblWelcomeMessage.Location = new System.Drawing.Point(329, 6);
+			this.lblWelcomeMessage.Location = new System.Drawing.Point(296, 6);
 			this.lblWelcomeMessage.Name = "lblWelcomeMessage";
 			this.lblWelcomeMessage.Size = new System.Drawing.Size(98, 13);
 			this.lblWelcomeMessage.TabIndex = 6;
@@ -299,7 +307,7 @@
 			// 
 			this.btnSaveSettings.Location = new System.Drawing.Point(6, 270);
 			this.btnSaveSettings.Name = "btnSaveSettings";
-			this.btnSaveSettings.Size = new System.Drawing.Size(595, 23);
+			this.btnSaveSettings.Size = new System.Drawing.Size(857, 23);
 			this.btnSaveSettings.TabIndex = 5;
 			this.btnSaveSettings.Text = "Save Settings";
 			this.btnSaveSettings.UseVisualStyleBackColor = true;
@@ -329,7 +337,7 @@
 			this.tbPageGiveaway.Location = new System.Drawing.Point(4, 22);
 			this.tbPageGiveaway.Name = "tbPageGiveaway";
 			this.tbPageGiveaway.Padding = new System.Windows.Forms.Padding(3);
-			this.tbPageGiveaway.Size = new System.Drawing.Size(607, 300);
+			this.tbPageGiveaway.Size = new System.Drawing.Size(869, 300);
 			this.tbPageGiveaway.TabIndex = 2;
 			this.tbPageGiveaway.Text = "Custom Commands";
 			this.tbPageGiveaway.UseVisualStyleBackColor = true;
@@ -344,7 +352,7 @@
 			this.gpboxGiveaways.Controls.Add(this.giveawayEnteredUsers);
 			this.gpboxGiveaways.Location = new System.Drawing.Point(6, 6);
 			this.gpboxGiveaways.Name = "gpboxGiveaways";
-			this.gpboxGiveaways.Size = new System.Drawing.Size(597, 285);
+			this.gpboxGiveaways.Size = new System.Drawing.Size(857, 285);
 			this.gpboxGiveaways.TabIndex = 0;
 			this.gpboxGiveaways.TabStop = false;
 			this.gpboxGiveaways.Text = "Giveaway";
@@ -352,7 +360,7 @@
 			// lblGiveawayLengthProgress
 			// 
 			this.lblGiveawayLengthProgress.AutoSize = true;
-			this.lblGiveawayLengthProgress.Location = new System.Drawing.Point(191, 227);
+			this.lblGiveawayLengthProgress.Location = new System.Drawing.Point(283, 227);
 			this.lblGiveawayLengthProgress.Name = "lblGiveawayLengthProgress";
 			this.lblGiveawayLengthProgress.Size = new System.Drawing.Size(145, 13);
 			this.lblGiveawayLengthProgress.TabIndex = 21;
@@ -363,7 +371,7 @@
 			// 
 			this.gpbxGiveawaySettings.Controls.Add(this.label3);
 			this.gpbxGiveawaySettings.Controls.Add(this.txtGiveawayPointsEarnedPerX);
-			this.gpbxGiveawaySettings.Location = new System.Drawing.Point(417, 14);
+			this.gpbxGiveawaySettings.Location = new System.Drawing.Point(509, 14);
 			this.gpbxGiveawaySettings.Name = "gpbxGiveawaySettings";
 			this.gpbxGiveawaySettings.Size = new System.Drawing.Size(174, 46);
 			this.gpbxGiveawaySettings.TabIndex = 20;
@@ -395,7 +403,7 @@
 			this.gpboxCurrentGiveawaySettings.Controls.Add(this.lblGiveawayPointsRequired);
 			this.gpboxCurrentGiveawaySettings.Controls.Add(this.lblGiveawayLength);
 			this.gpboxCurrentGiveawaySettings.Controls.Add(this.txtGiveawayLength);
-			this.gpboxCurrentGiveawaySettings.Location = new System.Drawing.Point(194, 14);
+			this.gpboxCurrentGiveawaySettings.Location = new System.Drawing.Point(286, 14);
 			this.gpboxCurrentGiveawaySettings.Name = "gpboxCurrentGiveawaySettings";
 			this.gpboxCurrentGiveawaySettings.Size = new System.Drawing.Size(217, 100);
 			this.gpboxCurrentGiveawaySettings.TabIndex = 11;
@@ -456,7 +464,7 @@
 			// lblGiveawayProgress
 			// 
 			this.lblGiveawayProgress.AutoSize = true;
-			this.lblGiveawayProgress.Location = new System.Drawing.Point(191, 240);
+			this.lblGiveawayProgress.Location = new System.Drawing.Point(283, 240);
 			this.lblGiveawayProgress.Name = "lblGiveawayProgress";
 			this.lblGiveawayProgress.Size = new System.Drawing.Size(158, 13);
 			this.lblGiveawayProgress.TabIndex = 8;
@@ -464,9 +472,9 @@
 			// 
 			// cmdGiveawayStart
 			// 
-			this.cmdGiveawayStart.Location = new System.Drawing.Point(191, 256);
+			this.cmdGiveawayStart.Location = new System.Drawing.Point(286, 256);
 			this.cmdGiveawayStart.Name = "cmdGiveawayStart";
-			this.cmdGiveawayStart.Size = new System.Drawing.Size(400, 23);
+			this.cmdGiveawayStart.Size = new System.Drawing.Size(565, 23);
 			this.cmdGiveawayStart.TabIndex = 3;
 			this.cmdGiveawayStart.Text = "Start Giveaway";
 			this.cmdGiveawayStart.UseVisualStyleBackColor = true;
@@ -478,7 +486,7 @@
 			this.giveawayEnteredUsers.HorizontalScrollbar = true;
 			this.giveawayEnteredUsers.Location = new System.Drawing.Point(6, 14);
 			this.giveawayEnteredUsers.Name = "giveawayEnteredUsers";
-			this.giveawayEnteredUsers.Size = new System.Drawing.Size(179, 264);
+			this.giveawayEnteredUsers.Size = new System.Drawing.Size(274, 264);
 			this.giveawayEnteredUsers.TabIndex = 0;
 			// 
 			// tbPageCommands
@@ -487,7 +495,7 @@
 			this.tbPageCommands.Location = new System.Drawing.Point(4, 22);
 			this.tbPageCommands.Name = "tbPageCommands";
 			this.tbPageCommands.Padding = new System.Windows.Forms.Padding(3);
-			this.tbPageCommands.Size = new System.Drawing.Size(607, 300);
+			this.tbPageCommands.Size = new System.Drawing.Size(869, 300);
 			this.tbPageCommands.TabIndex = 3;
 			this.tbPageCommands.Text = "Commands";
 			this.tbPageCommands.UseVisualStyleBackColor = true;
@@ -496,14 +504,17 @@
 			// 
 			this.lstViewCommands.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.chCommand,
+            this.chEnabled,
             this.chDescription,
-            this.chPrivileges});
+            this.chPrivileges,
+            this.chCustomReply});
+			this.lstViewCommands.ContextMenuStrip = this.cntxtMnuCommands;
 			this.lstViewCommands.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.lstViewCommands.FullRowSelect = true;
 			this.lstViewCommands.GridLines = true;
 			this.lstViewCommands.Location = new System.Drawing.Point(3, 3);
 			this.lstViewCommands.Name = "lstViewCommands";
-			this.lstViewCommands.Size = new System.Drawing.Size(601, 294);
+			this.lstViewCommands.Size = new System.Drawing.Size(863, 294);
 			this.lstViewCommands.TabIndex = 0;
 			this.lstViewCommands.UseCompatibleStateImageBehavior = false;
 			this.lstViewCommands.View = System.Windows.Forms.View.Details;
@@ -512,6 +523,10 @@
 			// 
 			this.chCommand.Text = "Command";
 			this.chCommand.Width = 226;
+			// 
+			// chEnabled
+			// 
+			this.chEnabled.Text = "Enabled";
 			// 
 			// chDescription
 			// 
@@ -523,20 +538,54 @@
 			this.chPrivileges.Text = "Privileges";
 			this.chPrivileges.Width = 77;
 			// 
-			// status
+			// chCustomReply
 			// 
-			this.status.Location = new System.Drawing.Point(0, 323);
-			this.status.Name = "status";
-			this.status.Size = new System.Drawing.Size(614, 22);
-			this.status.TabIndex = 5;
-			this.status.Text = "statusStrip1";
+			this.chCustomReply.Text = "Custom reply";
+			this.chCustomReply.Width = 192;
+			// 
+			// cntxtMnuCommands
+			// 
+			this.cntxtMnuCommands.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.addCommandToolStripMenuItem,
+            this.editToolStripMenuItem,
+            this.enableDisableToolStripMenuItem,
+            this.removeCommandToolStripMenuItem});
+			this.cntxtMnuCommands.Name = "cntxtMnuCommands";
+			this.cntxtMnuCommands.Size = new System.Drawing.Size(176, 114);
+			// 
+			// addCommandToolStripMenuItem
+			// 
+			this.addCommandToolStripMenuItem.Name = "addCommandToolStripMenuItem";
+			this.addCommandToolStripMenuItem.Size = new System.Drawing.Size(175, 22);
+			this.addCommandToolStripMenuItem.Text = "Add command";
+			this.addCommandToolStripMenuItem.Click += new System.EventHandler(this.addCommandToolStripMenuItem_Click);
+			// 
+			// editToolStripMenuItem
+			// 
+			this.editToolStripMenuItem.Name = "editToolStripMenuItem";
+			this.editToolStripMenuItem.Size = new System.Drawing.Size(175, 22);
+			this.editToolStripMenuItem.Text = "Edit command";
+			this.editToolStripMenuItem.Click += new System.EventHandler(this.editToolStripMenuItem_Click);
+			// 
+			// enableDisableToolStripMenuItem
+			// 
+			this.enableDisableToolStripMenuItem.Name = "enableDisableToolStripMenuItem";
+			this.enableDisableToolStripMenuItem.Size = new System.Drawing.Size(175, 22);
+			this.enableDisableToolStripMenuItem.Text = "Enable/Disable";
+			this.enableDisableToolStripMenuItem.Click += new System.EventHandler(this.enableDisableToolStripMenuItem_Click);
+			// 
+			// removeCommandToolStripMenuItem
+			// 
+			this.removeCommandToolStripMenuItem.Name = "removeCommandToolStripMenuItem";
+			this.removeCommandToolStripMenuItem.Size = new System.Drawing.Size(175, 22);
+			this.removeCommandToolStripMenuItem.Text = "Remove command";
+			this.removeCommandToolStripMenuItem.Click += new System.EventHandler(this.removeCommandToolStripMenuItem_Click);
 			// 
 			// Bot
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(614, 345);
-			this.Controls.Add(this.status);
+			this.ClientSize = new System.Drawing.Size(880, 328);
 			this.Controls.Add(this.TabControl1);
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
 			this.Name = "Bot";
@@ -556,8 +605,8 @@
 			this.gpboxCurrentGiveawaySettings.ResumeLayout(false);
 			this.gpboxCurrentGiveawaySettings.PerformLayout();
 			this.tbPageCommands.ResumeLayout(false);
+			this.cntxtMnuCommands.ResumeLayout(false);
 			this.ResumeLayout(false);
-			this.PerformLayout();
 
         }
 
@@ -603,11 +652,17 @@
 		private System.Windows.Forms.Label lblBotUsername;
 		private System.Windows.Forms.TextBox txtBotUsername;
 		private System.Windows.Forms.TabPage tbPageCommands;
-		private System.Windows.Forms.ListView lstViewCommands;
+		public System.Windows.Forms.ListView lstViewCommands;
 		private System.Windows.Forms.ColumnHeader chCommand;
 		private System.Windows.Forms.ColumnHeader chDescription;
 		private System.Windows.Forms.ColumnHeader chPrivileges;
-		private System.Windows.Forms.StatusStrip status;
+		private System.Windows.Forms.ContextMenuStrip cntxtMnuCommands;
+		private System.Windows.Forms.ToolStripMenuItem editToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem enableDisableToolStripMenuItem;
+		private System.Windows.Forms.ColumnHeader chEnabled;
+		private System.Windows.Forms.ToolStripMenuItem addCommandToolStripMenuItem;
+		private System.Windows.Forms.ColumnHeader chCustomReply;
+		private System.Windows.Forms.ToolStripMenuItem removeCommandToolStripMenuItem;
 	}
 }
 

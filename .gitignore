@@ -4,4 +4,5 @@ TopKekMemeBot/bin/Debug/Project.obproj
 TopKekMemeBot/bin/Debug/Project.obproj.map
 *.pdb
 *.bat
+Twitch Bot/bin/Debug/commands.xml
 Twitch Bot/bin/Debug/config.xml

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace TwitchBot.ChatCommands {
 	/// <summary>
@@ -15,7 +16,7 @@ namespace TwitchBot.ChatCommands {
 			new string[] { "!turnon", "Turn on the bot", "mod"} };
 
 		public void ProcessCommand(TwitchUser user, string[] command, out bool sendViaChat, out string message) {
-			for(int i = 0; i < Commands.Count(); i++) {
+			for(var i = 0; i < Commands.Count; i++) {
 				if((user.UserType == Commands[0][2] || ChatSettings.Channel == user.Username.ToLower()) && command[0] == Commands[0][0]) {
 					ChatSettings.BotEnabled = false;
 					sendViaChat = true;

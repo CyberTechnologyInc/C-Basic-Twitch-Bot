@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Drawing.Text;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
@@ -10,18 +12,20 @@ namespace TwitchBot {
 	internal class TwitchIrcConnection {
 		private TcpClient _client = new TcpClient();
 		private NetworkStream _stream;
-		private byte[] _dataBuffer = new byte[1024];
-		private int _port = 6667;
+		private readonly byte[] _dataBuffer = new byte[1024];
+		private const int Port = 6667;
 
 		private Timer _giveawayPointAdder;
 
-		public string ConIp { get; private set; }
-		public string ConUsername { get; private set; }
-		public string ConPassword { get; private set; }
-		public string ConChannel { get; private set; }
-		public bool Connected { get; private set; }
+		public string ConIp { get; set; }
+		public string ConUsername { get; set; }
+		public string ConPassword { get; set; }
+		public string ConChannel { get; set; }
+		public bool Connected { get; set; }
+		public List<TwitchUser> Users { get; set; }
 
 		public TwitchIrcConnection(string ip, string channel, string user, string pass) {
+			Users = new List<TwitchUser>();
 			ConIp = ip;
 			ConChannel = channel;
 			ConUsername = user;
@@ -50,18 +54,17 @@ namespace TwitchBot {
 		public TwitchUser get_sender(string msg) {
 			//This could probably be made faster, will do it soon.
 			//Gather all of the user's data (everything before a space), which is concatenated together with ;
-			TwitchUser twitchUser;
-			string name = "";
-			bool sub = false;
-			string moderator = "";
+			var name = "";
+			var sub = false;
+			var moderator = "";
             try {
 				//Linq, please.
-				var arr = msg.Substring(0, msg.IndexOf(" ")).Split(';').Select(x => x.Split('=')).ToDictionary(x => x[0], x => x[1]);
+				var arr = msg.Substring(0, msg.IndexOf(" ", StringComparison.Ordinal)).Split(';').Select(x => x.Split('=')).ToDictionary(x => x[0], x => x[1]);
 
 				name = (arr.ContainsKey("display-name")) ? arr["display-name"] : "";
 				if(name == "") {
-					var siftedJunk = msg.Substring(msg.IndexOf(" :") + 2);
-					foreach(char c in siftedJunk) {
+					var siftedJunk = msg.Substring(msg.IndexOf(" :", StringComparison.Ordinal) + 2);
+					foreach(var c in siftedJunk) {
 						if(c.ToString() == "!") {
 							break;
 						} else {
@@ -69,14 +72,20 @@ namespace TwitchBot {
 						}
 					}
 				}
-				sub = (arr.ContainsKey("subscriber")) ? (arr["subscriber"] == "1") : false;
-				moderator = (arr.ContainsKey("user-type")) ? arr["user-type"] : "";
+				sub = arr.ContainsKey("subscriber") ? arr["subscriber"] == "1" : false;
+				moderator = arr.ContainsKey("user-type") != null ? arr["user-type"] : "";
 
 			} catch(Exception ex) {
 				Program.BotForm.LogMessage("Error: " + ex.ToString());
 			}
-			twitchUser = new TwitchUser(name, moderator, sub);
-			return twitchUser;
+
+			var curUser = new TwitchUser(name, moderator, sub);
+			
+			if (!Users.Contains(curUser)) {
+				Users.Add(curUser);
+			}
+
+			return curUser;
 		}
 
 		public void send_data(byte[] data) {
@@ -86,31 +95,31 @@ namespace TwitchBot {
 		}
 
 		public void send_message(string msg) {
-			string data = "PRIVMSG " + get_channel(true) + " :" + msg + Environment.NewLine;
+			var data = "PRIVMSG " + get_channel(true) + " :" + msg + Environment.NewLine;
 			send_data(Encoding.UTF8.GetBytes(data));
 			Program.BotForm.LogMessage("Sent message: " + msg);
 		}
 
 		public void send_pass() {
-			string data = "PASS " + ConPassword + Environment.NewLine;
+			var data = "PASS " + ConPassword + Environment.NewLine;
 			send_data(Encoding.UTF8.GetBytes(data));
 			Program.BotForm.LogMessage("Sent password to authenticate");
 		}
 
 		public void send_nick() {
-			string data = "NICK " + ConUsername + Environment.NewLine;
+			var data = "NICK " + ConUsername + Environment.NewLine;
 			send_data(Encoding.UTF8.GetBytes(data));
 			Program.BotForm.LogMessage("Sent nick to authenticate: " + ConUsername);
 		}
 
 		public void join_channel() {
-			string data = "JOIN " + get_channel(true) + Environment.NewLine;
+			var data = "JOIN " + get_channel(true) + Environment.NewLine;
 			send_data(Encoding.UTF8.GetBytes(data));
 			Program.BotForm.LogMessage("Sent request to join channel: " + get_channel(true));
 		}
 
 		public void disconnect_channel() {
-			string data = "PART " + get_channel(true) + Environment.NewLine;
+			var data = "PART " + get_channel(true) + Environment.NewLine;
 			send_data(Encoding.UTF8.GetBytes(data));
 			Program.BotForm.LogMessage("Disconnected from channel: " + get_channel(true));
 		}
@@ -121,10 +130,10 @@ namespace TwitchBot {
 			try {
 				if(!_client.Connected) {
 					_client = new TcpClient();
-					int attemptNum = 1;
+					var attemptNum = 1;
 					Program.BotForm.LogMessage("Connecting to host " + ConIp + ", attempt " + attemptNum + ".");
 					while(!_client.Connected) {
-						_client.Connect(ConIp, _port);
+						_client.Connect(ConIp, Port);
 						System.Threading.Thread.Sleep(250);
 						attemptNum += 1;
 					}
@@ -135,7 +144,7 @@ namespace TwitchBot {
 						//Start to read data received from the network connection.
 						_stream.BeginRead(_dataBuffer, 0, _dataBuffer.Length, ReceiveData, null);
 
-						Program.BotForm.LogMessage("Connected to " + ConIp + " on port " + _port);
+						Program.BotForm.LogMessage("Connected to " + ConIp + " on port " + Port);
 
 						Program.BotForm.LogMessage("Attempting to authenticate " + ConUsername + " on " + get_channel(true));
 
@@ -177,12 +186,10 @@ namespace TwitchBot {
 
 		public void ReceiveData(IAsyncResult ar) {
 			try {
-				int length = _stream.EndRead(ar);
+				_stream.EndRead(ar);
 			} catch(ObjectDisposedException) {
 				return;
 			}
-
-			string message = string.Empty;
 
 			try {
 				while(true) {
@@ -193,11 +200,11 @@ namespace TwitchBot {
 					}
 
 					_stream.Read(_dataBuffer, 0, _dataBuffer.Length);
-					message = Encoding.UTF8.GetString(_dataBuffer).Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries)[0];
+					var message = Encoding.UTF8.GetString(_dataBuffer).Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries)[0];
 
-					if(message.Length >= 1) {
+					if(message.Contains(" ") && message.Length >= 1) {
 
-						string[] arr = message.Split(' ');
+						var arr = message.Split(' ');
 
 						//Process PING/PONG or send data to main form for processing
 						if(arr[0] == "PING") {
@@ -216,6 +223,7 @@ namespace TwitchBot {
 			} finally {
 				//If the bot should be connected but error'd out, reconnect.
 				if(Connected) {
+					Disconnect();
 					ConnectToServer();
 					send_message("Sorry about that guys. Something went wrong, but I'm back now!");
 				}
