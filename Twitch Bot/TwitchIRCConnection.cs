@@ -10,12 +10,12 @@ using System.Windows.Forms;
 namespace TwitchBot {
 
 	internal class TwitchIrcConnection {
-		private TcpClient _client = new TcpClient();
-		private NetworkStream _stream;
-		private readonly byte[] _dataBuffer = new byte[1024];
-		private const int Port = 6667;
+		private TcpClient client = new TcpClient();
+		private NetworkStream stream;
+		private readonly byte[] dataBuffer = new byte[1024];
+		private const int PORT = 6667;
 
-		private Timer _giveawayPointAdder;
+		private Timer giveawayPointAdder;
 
 		public string ConIp { get; set; }
 		public string ConUsername { get; set; }
@@ -72,8 +72,8 @@ namespace TwitchBot {
 						}
 					}
 				}
-				sub = arr.ContainsKey("subscriber") ? arr["subscriber"] == "1" : false;
-				moderator = arr.ContainsKey("user-type") != null ? arr["user-type"] : "";
+				sub = arr.ContainsKey("subscriber") && (arr["subscriber"] == "1");
+				moderator = arr.ContainsKey("user-type") ? arr["user-type"] : "";
 
 			} catch(Exception ex) {
 				Program.BotForm.LogMessage("Error: " + ex.ToString());
@@ -89,9 +89,9 @@ namespace TwitchBot {
 		}
 
 		public void send_data(byte[] data) {
-			if(!_client.Connected) { return; }
-			_stream.Write(data, 0, data.Length);
-			_stream.Flush();
+			if(!client.Connected) { return; }
+			stream.Write(data, 0, data.Length);
+			stream.Flush();
 		}
 
 		public void send_message(string msg) {
@@ -128,23 +128,23 @@ namespace TwitchBot {
 
 		public void ConnectToServer() {
 			try {
-				if(!_client.Connected) {
-					_client = new TcpClient();
+				if(!client.Connected) {
+					client = new TcpClient();
 					var attemptNum = 1;
 					Program.BotForm.LogMessage("Connecting to host " + ConIp + ", attempt " + attemptNum + ".");
-					while(!_client.Connected) {
-						_client.Connect(ConIp, Port);
+					while(!client.Connected) {
+						client.Connect(ConIp, PORT);
 						System.Threading.Thread.Sleep(250);
 						attemptNum += 1;
 					}
 
-					if(_client.Connected) {
-						_stream = _client.GetStream();
+					if(client.Connected) {
+						stream = client.GetStream();
 
 						//Start to read data received from the network connection.
-						_stream.BeginRead(_dataBuffer, 0, _dataBuffer.Length, ReceiveData, null);
+						stream.BeginRead(dataBuffer, 0, dataBuffer.Length, ReceiveDataFromStream, null);
 
-						Program.BotForm.LogMessage("Connected to " + ConIp + " on port " + Port);
+						Program.BotForm.LogMessage("Connected to " + ConIp + " on port " + PORT);
 
 						Program.BotForm.LogMessage("Attempting to authenticate " + ConUsername + " on " + get_channel(true));
 
@@ -160,10 +160,10 @@ namespace TwitchBot {
 						Connected = true;
 
 						//Start point maker (activates every minute)
-						_giveawayPointAdder = new Timer();
-						_giveawayPointAdder.Interval = 1000 * 60;
-						_giveawayPointAdder.Tick += new EventHandler(Program.BotForm.AddGiveawayPoints);
-						_giveawayPointAdder.Enabled = true;
+						giveawayPointAdder = new Timer();
+						giveawayPointAdder.Interval = 1000 * 60;
+						giveawayPointAdder.Tick += Program.BotForm.AddGiveawayPoints;
+						giveawayPointAdder.Enabled = true;
 
 						send_message(Program.BotForm.txtWelcomeMessage.Text);
 					}
@@ -178,15 +178,18 @@ namespace TwitchBot {
 		public void Disconnect() {
 			send_message(Program.BotForm.txtLeavingMessage.Text);
 			Connected = false;
-			_client.Close();
-			_stream.Close();
+			client.Close();
+			stream.Close();
 			disconnect_channel();
-			_giveawayPointAdder.Enabled = false;
+			giveawayPointAdder.Enabled = false;
 		}
 
-		public void ReceiveData(IAsyncResult ar) {
+		public delegate void ReceivedData(object sender, string messageToParse);
+		public event ReceivedData ReceiveData;
+
+		public void ReceiveDataFromStream(IAsyncResult ar) {
 			try {
-				_stream.EndRead(ar);
+				stream.EndRead(ar);
 			} catch(ObjectDisposedException) {
 				return;
 			}
@@ -195,31 +198,29 @@ namespace TwitchBot {
 				while(true) {
 					//If we want to close the connection, stop reading from the stream so that it can be ended.
 					if(!Connected) {
-						_stream.EndRead(ar);
+						stream.EndRead(ar);
 						break;
 					}
 
-					_stream.Read(_dataBuffer, 0, _dataBuffer.Length);
-					var message = Encoding.UTF8.GetString(_dataBuffer).Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries)[0];
+					stream.Read(dataBuffer, 0, dataBuffer.Length);
+					var message = Encoding.UTF8.GetString(dataBuffer).Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries)[0];
 
 					if(message.Contains(" ") && message.Length >= 1) {
 
 						var arr = message.Split(' ');
 
 						//Process PING/PONG or send data to main form for processing
-						if(arr[0] == "PING") {
-							Program.BotForm.LogMessage("Received PING, sending PONG to " + ConIp);
+						if(arr[0] == "PING"){
 							send_data(Encoding.UTF8.GetBytes("PONG " + ConIp + Environment.NewLine));
-						} else {
-							Program.BotForm.ReceiveData(message, ConIp);
+						}else {
+							ReceiveData?.Invoke(this, message);
 						}
 					}
 				}
-				//} catch() {
 			} catch(System.IO.IOException) { 
 
 			} catch(Exception ex) {
-				Program.BotForm.LogMessage("Error: " + ex.ToString());
+				Program.BotForm.LogMessage("Error: " + ex);
 			} finally {
 				//If the bot should be connected but error'd out, reconnect.
 				if(Connected) {

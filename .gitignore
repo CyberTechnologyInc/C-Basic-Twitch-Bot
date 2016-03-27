@@ -1,5 +1,8 @@
 *.exe
 *.pdb
 *.bat
-Twitch Bot/bin/
+Twitch Bot/bin/Debug/config.xml
+Twitch Bot/bin/Debug/commands.xml
+Twitch Bot/bin/Debug/*.config
+Twitch Bot/bin/Debug/*.manifest
 Twitch Bot/obj/

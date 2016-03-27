@@ -6,14 +6,14 @@ namespace TwitchBot.ChatCommands {
 	/// <summary>
 	/// These commands will be executed regardless of if the bot was turned on or off in chat
 	/// </summary>
-	class AdminCommands : IChatCommand, IAdminChatCommand {
+	class AdminCommands : IAdminChatCommand {
 		//public bool BotEnabled { get; set; }
 		public bool PrioritiseCommands { get; set; } = true;
 		public bool BypassEnabledStatus { get; set; } = true;
 
 		//Commands, description, privileges
-		public List<string[]> Commands { get; set; } = new List<string[]> { new string[] { "!turnoff", "Turn off the bot", "mod" },
-			new string[] { "!turnon", "Turn on the bot", "mod"} };
+		public List<string[]> Commands { get; set; } = new List<string[]> { new [] { "!turnoff", "Turn off the bot", "mod" },
+			new [] { "!turnon", "Turn on the bot", "mod"} };
 
 		public void ProcessCommand(TwitchUser user, string[] command, out bool sendViaChat, out string message) {
 			for(var i = 0; i < Commands.Count; i++) {

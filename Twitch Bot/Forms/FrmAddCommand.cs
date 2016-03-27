@@ -21,7 +21,6 @@ namespace TwitchBot.Forms {
 
 			//Check for custom variables that will be used to increment/decrement data
 			if(txtReply.Text != null) {
-				var tmpData = txtReply.Text;
 				foreach(var dat in txtReply.Text.Split(' ')) {
 					var potentialVar = GetStringBetween(dat, "{", "}");
 					if(potentialVar != null && potentialVar.StartsWith("$")) {
@@ -48,7 +47,7 @@ namespace TwitchBot.Forms {
 			};
 
 			CommandManager.AddCommand(cmd);
-			CommandManager.SaveCommands();
+			//CommandManager.SaveCommands();
 			CommandManager.UpdateCommandList();
 			Close();
 		}

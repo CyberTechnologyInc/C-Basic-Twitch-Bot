@@ -22,7 +22,6 @@ namespace TwitchBot.ChatCommands {
 		public List<VariableData> Variables { get; set; }
 
 		//Custom command - only accepts static replies for now
-		//TODO: Add a way for bot owner to add dynamic replies (For example sugrud's "cut" - which increments each time someone says it)
 		public string CustomReply { get; set; }
 		public bool SendViaChat { get; set; }
 	}
@@ -126,13 +125,13 @@ namespace TwitchBot.ChatCommands {
 		/// </summary>
 		public static void SaveCommands() {
 			foreach(var command in commands) {
-				if(!File.Exists(CommandManager.commandsFile)) {
+				if(!File.Exists(commandsFile)) {
 					var doc = new XDocument(new XElement("Commands"));
 					var data = GetNewCommandXml(command);
-                    doc.Root.Add(data);
-					doc.Save(CommandManager.commandsFile);
+                    doc.Root?.Add(data);
+					doc.Save(commandsFile);
 				} else {
-					var doc = XDocument.Load(CommandManager.commandsFile);
+					var doc = XDocument.Load(commandsFile);
 					var found = false;
 					foreach(var el in doc.Elements("Commands").Elements()) {
 						var cmdName = el.Attribute("name");
@@ -146,20 +145,24 @@ namespace TwitchBot.ChatCommands {
 					}
 
 					if(!found) {
-						doc.Root.Add(GetNewCommandXml(command));
+						doc.Root?.Add(GetNewCommandXml(command));
 					}
 
-					doc.Save(CommandManager.commandsFile);
+					doc.Save(commandsFile);
 				}
 			} 
 		}
 
+		/// <summary>
+		/// Saves a single command into the XML version
+		/// </summary>
+		/// <param name="command"></param>
 		public static void SaveCommand(CommandData command) {
 			foreach(var cmd in commands) {
 				if(!File.Exists(commandsFile)) {
 					var doc = new XDocument(new XElement("Commands"));
 					var data = GetNewCommandXml(cmd);
-					doc.Root.Add(data);
+					doc.Root?.Add(data);
 					doc.Save(commandsFile);
 				} else {
 					var doc = XDocument.Load(commandsFile);
@@ -176,7 +179,7 @@ namespace TwitchBot.ChatCommands {
 					}
 
 					if(!found) {
-						doc.Root.Add(GetNewCommandXml(cmd));
+						doc.Root?.Add(GetNewCommandXml(cmd));
 					}
 
 					doc.Save(commandsFile);
@@ -184,6 +187,9 @@ namespace TwitchBot.ChatCommands {
 			}
 		}
 
+		/// <summary>
+		/// Updates the command listview to list all of the commands
+		/// </summary>
 		public static void UpdateCommandList() {
 			SaveCommands();
 
@@ -191,32 +197,33 @@ namespace TwitchBot.ChatCommands {
 
 			foreach(var itm in commands) {
                 var lvi = new ListViewItem { Text = itm.Name };
-                lvi.SubItems.Add(CommandManager.BoolToYesNo(itm.Enabled));
+                lvi.SubItems.Add(BoolToYesNo(itm.Enabled));
 				lvi.SubItems.Add(itm.Description);
 				lvi.SubItems.Add(string.Join(PRIVILEGE_SPLIT_STRING, itm.Privileges));
 				Program.BotForm.lstViewCommands.Items.Add(lvi);
 			}
         }
 
+		/// <summary>
+		/// Removes a command
+		/// </summary>
+		/// <param name="text">The command's activator (Example: !help)</param>
 		public static void RemoveCommand(string text) {
 			var id = commands.FindIndex(f => f.Name == text);
 			if(commands.Count > 0 && id != -1) {
 				commands.RemoveAt(id);
 			}
 
-			if(File.Exists(CommandManager.commandsFile)) {
-				var doc = XDocument.Load(CommandManager.commandsFile);
-				var found = false;
+			if(File.Exists(commandsFile)) {
+				var doc = XDocument.Load(commandsFile);
 				foreach(var el in doc.Elements("Commands").Elements()) {
-					var cmdName = el.Attribute("name");
-					if(cmdName != null) {
-						if(cmdName.Value == text) {
-							el.Remove();
-							break;
-						}
+					if(el.Attribute("name")?.Value == text) {
+						el.Remove();
+						break;
 					}
 				}
-				doc.Save(CommandManager.commandsFile);
+
+				doc.Save(commandsFile);
 			}
 		}
 	}

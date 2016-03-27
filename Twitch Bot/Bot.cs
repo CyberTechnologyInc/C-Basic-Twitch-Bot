@@ -97,7 +97,10 @@ namespace TwitchBot {
 			if(chkboxAutoStart.Checked) {
 				cmdStartBot.PerformClick();
 			}
+
+			channelConnection.ReceiveData += ParseReceivedData;
 		}
+
 
 		private bool botEnabledSwitch = false;
 
@@ -322,10 +325,8 @@ namespace TwitchBot {
 
 		public StreamData streamData = new StreamData();
 
-		public void ReceiveData(string message, string ip) {
+		public void ParseReceivedData(object sendingClass, string message) {
 			var arr = message.Split(' ');
-
-			//logMessage("Received: " + message);
 
 			if(arr[2] == "PRIVMSG") {
 				var sender = channelConnection.get_sender(message);
@@ -335,94 +336,98 @@ namespace TwitchBot {
 				userMessage = userMessage.Remove(0, weirdString.Length);
 				var msg = userMessage.Split(' ');
 
-				//Only log messages if the checkbox is ticked.
-				if(chkboxLogChatMessages.Checked) {
-					LogMessage(sender.Username + ": " + userMessage);
-				}
+				ProcessReceivedData(sender, msg);
+			}
+		}
 
-				//Purge non-sub links (Moderator exception)
-				if(chkboxPurgeNonSubsLinks.Checked) {
-					if(channelConnection.get_channel(false) != sender.Username.ToLower()) {
-						if(sender.UserType != "mod") {
-							if(!sender.Sub) {
-								foreach(var potentialUrl in msg) {
-									var lines = Properties.Resources.TLDS.Split(new string[1] { Environment.NewLine }, StringSplitOptions.None);
-									var illegal = false;
+		public void ProcessReceivedData(TwitchUser sender, string[] message) {
+			//Only log messages if the checkbox is ticked.
+			if(chkboxLogChatMessages.Checked) {
+				LogMessage(sender.Username + ": " + string.Join(" ", message));
+			}
 
-									foreach(var line in lines) {
-										if(line != null) {
-											if(potentialUrl.Contains("." + line.ToLower() + "?")) {
-												illegal = true;
-												break;
-											} else if(potentialUrl.Contains("." + line.ToLower() + "/")) {
-												illegal = true;
-												break;
-											} else if(potentialUrl.Contains("." + line.ToLower())) {
-												illegal = true;
-												break;
-											}
+			//Purge non-sub links (Moderator exception)
+			if(chkboxPurgeNonSubsLinks.Checked) {
+				if(channelConnection.get_channel(false) != sender.Username.ToLower()) {
+					if(sender.UserType != "mod") {
+						if(!sender.Sub) {
+							foreach(var potentialUrl in message) {
+								var lines = Properties.Resources.TLDS.Split(new string[1] { Environment.NewLine }, StringSplitOptions.None);
+								var illegal = false;
+
+								foreach(var line in lines) {
+									if(line != null) {
+										if(potentialUrl.Contains("." + line.ToLower() + "?")) {
+											illegal = true;
+											break;
+										} else if(potentialUrl.Contains("." + line.ToLower() + "/")) {
+											illegal = true;
+											break;
+										} else if(potentialUrl.Contains("." + line.ToLower())) {
+											illegal = true;
+											break;
 										}
 									}
+								}
 
-									if(illegal) {
-										channelConnection.send_message("/timeout " + sender.Username + " 1");
-										channelConnection.send_message("Naughty " + sender.Username + ", only subs can link!");
+								if(illegal) {
+									channelConnection.send_message("/timeout " + sender.Username + " 1");
+									channelConnection.send_message("Naughty " + sender.Username + ", only subs can link!");
+									break;
+								}
+							}
+						}
+					}
+				}
+			}
+
+			if(message[0] == "!help" || message[0] == "!commands") {
+				var sb = new StringBuilder();
+				sb.Append("Here is a full list of commands: ");
+				foreach(var processor in chatCommands) {
+					foreach(var cmd in processor.Commands) {
+						sb.Append(cmd[0] + ", ");
+					}
+				}
+
+				var completeData = sb.ToString().Trim();
+				completeData = completeData.Remove(completeData.Length - 1);
+				channelConnection.send_message(completeData);
+				return;
+			}
+
+			//If it's an admin command and bypassEnabledStatus is true, process command regardless of the bot's enabled status.
+			//Otherwise, respect the status.
+
+			//First check if the command exists (instead of looping through all of the command processors - wasting time)
+			var curCommand = CommandManager.GetCommandData(message[0]);
+			if(curCommand != null) {
+				if(curCommand.Enabled) {
+					if(string.IsNullOrEmpty(curCommand.CustomReply)) {
+						foreach(var processor in chatCommands) {
+							bool sendViaChat;
+							string returnMessage;
+							processor.ProcessCommand(sender, message, out sendViaChat, out returnMessage);
+							if(returnMessage != null) {
+								var adminCmd = processor as IAdminChatCommand;
+								if(adminCmd != null) {
+									if(adminCmd.BypassEnabledStatus) {
+										ProcessCommandData(sendViaChat, returnMessage);
+										break;
+									}
+								} else {
+									if(ChatSettings.BotEnabled) {
+										ProcessCommandData(sendViaChat, returnMessage);
 										break;
 									}
 								}
+
+								return;
 							}
 						}
-					}
-				}
-
-				if(msg[0] == "!help" || msg[0] == "!commands"){
-					var sb = new StringBuilder();
-					sb.Append("Here is a full list of commands: ");
-					foreach (var processor in chatCommands) {
-						foreach (var cmd in processor.Commands){
-							sb.Append(cmd[0] + ", ");
-						}
-					}
-
-					var completeData = sb.ToString().Trim();
-					completeData = completeData.Remove(completeData.Length - 1);
-                    channelConnection.send_message(completeData);
-					return;
-				}
-
-				//If it's an admin command and bypassEnabledStatus is true, process command regardless of the bot's enabled status.
-				//Otherwise, respect the status.
-
-				//First check if the command exists (instead of looping through all of the command processors - wasting time)
-				var curCommand = CommandManager.GetCommandData(msg[0]);
-				if(curCommand != null) {
-					if(curCommand.Enabled) {
-						if(curCommand.CustomReply == null) {
-							foreach(var processor in chatCommands) {
-								bool sendViaChat;
-								string returnMessage;
-								processor.ProcessCommand(sender, msg, out sendViaChat, out returnMessage);
-								if(returnMessage != null) {
-									var adminCmd = processor as IAdminChatCommand;
-									if(adminCmd != null) {
-										if(adminCmd.BypassEnabledStatus) {
-											ProcessCommandData(sendViaChat, returnMessage);
-											break;
-										}
-									} else {
-										if(ChatSettings.BotEnabled) {
-											ProcessCommandData(sendViaChat, returnMessage);
-											break;
-										}
-									}
-
-									return;
-								}
-							}
-						} else {
-							//Process custom command
-							ProcessCommandData(curCommand.SendViaChat, curCommand);
-						}
+					} else {
+						//Process custom command
+						ProcessCommandData(curCommand);
 					}
 				}
 			}
@@ -436,29 +441,29 @@ namespace TwitchBot {
 			}
 		}
 
-		private void ProcessCommandData(bool sendViaChat, CommandData command) {
+		private void ProcessCommandData(CommandData command) {
 			if(command != null) {
 				var messageToSend = command.CustomReply;
 				foreach(var variable in command.Variables) {
 					var replaceStr = "{" + variable.Name + (variable.Increment ? "++" : "--") + "}";
                     if(variable.Increment) {	
-						variable.Value += 1;
+						++variable.Value;
 					} else {
-						variable.Value -= 1;
+						--variable.Value;
 					}
 
 					messageToSend = messageToSend.Replace(replaceStr, variable.Value.ToString());
 				}
 
 				//Use the command data in order to generate a custom reply
-                if(sendViaChat) {
+                if(command.SendViaChat) {
 					channelConnection.send_message(messageToSend);
 				} else {
 					whisperConnection.send_message(messageToSend);
 				}
 			}
 
-			//CommandManager.SaveCommand(command);
+			CommandManager.SaveCommand(command);
 			CommandManager.AddCommand(command);
 		}
 
@@ -633,6 +638,8 @@ namespace TwitchBot {
 
 		private void cmdSendCommand_Click(object sender, EventArgs e) {
 			if(txtCommand.Text != "") {
+				var user = new TwitchUser("ManselD", "", true);
+				Program.BotForm.ProcessReceivedData(user, txtCommand.Text.Split(' '));
 				if(txtCommand.Text.StartsWith("/w ")) {
 					whisperConnection.send_message(txtCommand.Text);
 					txtCommand.Clear();
@@ -640,7 +647,7 @@ namespace TwitchBot {
 					channelConnection.send_message(txtCommand.Text);
 					txtCommand.Clear();
 				}
-			}
+            }
 		}
 
 		private void chkboxLogChatMessages_CheckedChanged(object sender, EventArgs e) {
