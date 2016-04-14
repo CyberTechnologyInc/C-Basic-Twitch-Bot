@@ -105,8 +105,16 @@ namespace TwitchBot.ChatCommands {
 		/// <returns></returns>
 		private static XElement GetNewCommandXml(CommandData command) {
 			var tempStr = new StringBuilder();
-			foreach(var itm in command.Variables) {
-				tempStr.Append(itm.Name + ":" + (itm.Increment ? "1" : "0") + ":" + itm.Value + ";");
+			if(command.Variables != null) {
+				foreach(var itm in command.Variables) {
+					tempStr.Append(itm.Name + ":" + (itm.Increment ? "1" : "0") + ":" + itm.Value + ";");
+				}
+			} else {
+				tempStr.Append("");
+			}
+
+			if(command.CustomReply == null) {
+				command.CustomReply = "";
 			}
 
 			return new XElement("command",

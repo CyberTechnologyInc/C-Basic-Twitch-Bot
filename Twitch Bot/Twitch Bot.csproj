@@ -51,8 +51,16 @@
     <StartupObject>TwitchBot.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="CTI.SimpleSettings">
-      <HintPath>..\..\..\Documents\Visual Studio 2015\Projects\C#\Simple Settings\Simple Settings\bin\Debug\CTI.SimpleSettings.dll</HintPath>
+    <Reference Include="CTI.SimpleSettings, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>D:\MegaSync\Coding\C#\Simple Settings\Simple Settings\bin\Debug\CTI.SimpleSettings.dll</HintPath>
+    </Reference>
+    <Reference Include="JsonConfig, Version=1.0.5943.41583, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\Debug\JsonConfig.dll</HintPath>
+    </Reference>
+    <Reference Include="JsonFx">
+      <HintPath>..\..\..\..\..\..\Desktop\JsonConfig-master\JsonConfig\bin\Debug\JsonFx.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.8.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -134,6 +142,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <None Include="default.conf" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

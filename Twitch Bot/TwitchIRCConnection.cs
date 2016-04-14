@@ -76,7 +76,7 @@ namespace TwitchBot {
 				moderator = arr.ContainsKey("user-type") ? arr["user-type"] : "";
 
 			} catch(Exception ex) {
-				Program.BotForm.LogMessage("Error: " + ex.ToString());
+				Program.BotForm.LogMessage("Error: " + ex);
 			}
 
 			var curUser = new TwitchUser(name, moderator, sub);
@@ -186,7 +186,6 @@ namespace TwitchBot {
 
 		public delegate void ReceivedData(object sender, string messageToParse);
 		public event ReceivedData ReceiveData;
-
 		public void ReceiveDataFromStream(IAsyncResult ar) {
 			try {
 				stream.EndRead(ar);
@@ -197,7 +196,7 @@ namespace TwitchBot {
 			try {
 				while(true) {
 					//If we want to close the connection, stop reading from the stream so that it can be ended.
-					if(!Connected) {
+					if(!Connected || !client.Connected) {
 						stream.EndRead(ar);
 						break;
 					}

@@ -6,10 +6,11 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Windows.Forms;
-using System.Xml.Linq;
 using TwitchBot.JSON_Objects;
 using TwitchBot.ChatCommands;
-using CTI.SimpleSettings;
+using JsonConfig;
+using JsonFx;
+using Newtonsoft.Json.Linq;
 using TwitchBot.ChatCommands.Giveaway;
 using TwitchBot.Forms;
 
@@ -19,8 +20,6 @@ namespace TwitchBot {
 		//private Dictionary<string, double> cooldownList = new Dictionary<string, double>();
 		//private Dictionary<string, string> commandList = new Dictionary<string, string>();
 
-		private readonly SettingsManager settings = new SettingsManager();
-
 		private const string LOG_PREFIX = "[TKMB]";
 
 		public Bot() {
@@ -28,7 +27,6 @@ namespace TwitchBot {
 		}
 
 		private TwitchIrcConnection channelConnection;
-		private TwitchIrcConnection whisperConnection;
 		private readonly List<IChatCommand> chatCommands = new List<IChatCommand>();
 
 		//Think of a good way of setting up commands...
@@ -69,24 +67,25 @@ namespace TwitchBot {
 			//Setup connections to IRC servers
 			ChatSettings.Channel = txtChannel.Text;
 
-			//Add commands
+			//Add commands to List of chat commands
+			//TODO: Add the majority of these commands inside of the XML file (maybe store it in resources then create the file if it doesn't already exist?)
 			chatCommands.Add(new AdminCommands());
 			chatCommands.Add(new DefaultChatCommands());
 			chatCommands.Add(new SongCommands());
 			chatCommands.Add(new GiveawayCommands());
 
-			//Setup prioritisation and add commands to the command list
+			//Setup prioritisation and add commands from the list into the listview
 			SetupCommands();
 
 			if(File.Exists(settingsFile)) {
-				settings.LoadSettings(settingsFile);
+				//settings.LoadSettings(settingsFile);
 				LoadSettings();
 			}
 
 			//Setup connection to normal chat
 			channelConnection = new TwitchIrcConnection("irc.twitch.tv", txtChannel.Text, txtBotUsername.Text, txtBotPassword.Text);
-			//Setup connection to be able to whisper to users
-			whisperConnection = new TwitchIrcConnection("199.9.253.119", txtChannel.Text, txtBotUsername.Text, txtBotPassword.Text);
+			//Setup connection to be able to whisper to users - no longer needed as twitch integrated this into their main IRC channel.
+			//whisperConnection = new TwitchIrcConnection("199.9.253.119", txtChannel.Text, txtBotUsername.Text, txtBotPassword.Text);
 
 			giveawayAddPointsTimer = new Timer {
 				Interval = 60 * 1000,
@@ -102,45 +101,22 @@ namespace TwitchBot {
 		}
 
 
-		private bool botEnabledSwitch = false;
+		private bool botEnabledSwitch;
 
 		private void cmdStartBot_Click(object sender, EventArgs e) {
 			if(botEnabledSwitch) {
 				botEnabledSwitch = false;
 				channelConnection.Disconnect();
-				whisperConnection.Disconnect();
 				cmdStartBot.Text = "Start";
 			} else {
 				botEnabledSwitch = true;
 				channelConnection.ConnectToServer();
-				whisperConnection.ConnectToServer();
 				cmdStartBot.Text = "Stop";
 			}
 		}
 
-		private readonly string settingsFile = Application.StartupPath + @"\config.xml";
+		private readonly string settingsFile = Application.StartupPath + @"\settings.conf";
 		#region "Save/Load Settings"
-
-		/*
-		public Bot_Settings Settings = new Bot_Settings();
-
-		public class Bot_Settings {
-			public bool AutoStartProgram { get; set; }
-			public string Channel { get; set; }
-			public string WelcomeMessage { get; set; }
-			public string LeavingMessage { get; set; }
-			public string CMDCooldown { get; set; }
-			public bool LogChatMessages { get; set; }
-			public bool PurgeNonSubLinks { get; set; }
-
-			//Giveaway Settings
-			public int Giveaway_PointsPerMinute { get; set; }
-
-			public string Giveaway_EnterCommand { get; set; }
-			public string Giveaway_ShowPointsCommand { get; set; }
-		}
-		*/
-
 
 		//This seems icky to me, is it?
 		//Defaults to false
@@ -154,46 +130,45 @@ namespace TwitchBot {
 		}
 
 		private void SaveSettings() {
-			//Bot connection details
-			settings.AddSetting("bot_username", txtBotUsername.Text);
-			settings.AddSetting("bot_password", txtBotPassword.Text);
-			settings.AddSetting("channel", txtChannel.Text);
+			var jsonObject = JObject.FromObject(new{
+				Settings = new{
+					BotUsername = txtBotUsername.Text,
+					BotPassword = txtBotPassword.Text,
+					Channel = txtChannel.Text,
 
-			//General bot settings
-			settings.AddSetting("auto_start_bot", chkboxAutoStart.Checked);
-			settings.AddSetting("command_cooldown", txtCooldownTime.Text);
-			settings.AddSetting("welcome_message", txtWelcomeMessage.Text);
-			settings.AddSetting("leaving_message", txtLeavingMessage.Text);
-			settings.AddSetting("purge_non_sub_links", chkboxPurgeNonSubsLinks.Checked);
-			settings.AddSetting("log_chat_messages", chkboxLogChatMessages.Checked);
+					AutoStartBotOnLoad = chkboxAutoStart.Checked,
+					ShouldLogChatMessages = chkboxLogChatMessages.Checked,
+					PurgeNonSubLinks = chkboxPurgeNonSubsLinks.Checked,
+					WelcomeMessage = txtWelcomeMessage.Text,
+					LeavingMessage = txtLeavingMessage.Text,
 
-			//Giveaway settings
-			settings.AddSetting("giveaway_points_per_minute", txtGiveawayPointsEarnedPerX.Text);
-			//Settings.AddSetting("giveaway_enter_command", txt.Text);
+					GiveawayPointsEarned = txtGiveawayPointsEarnedPerX.Text
+				}
+			});
 
-			//Save all settings that have been added
-			settings.SaveSettings(settingsFile);
+			File.WriteAllText(Application.StartupPath + @"\settings.conf", JsonConvert.SerializeObject(jsonObject, Formatting.Indented));
 		}
 
 		private void LoadSettings() {
-			//TODO: Use generics in settings manager in order to not cast every single thing
-			//Does that logic even make sense? I don't even know.
-			//Bot connection details
-			txtBotUsername.Text = (string)settings.GetSetting("bot_username");
-			txtBotPassword.Text = (string)settings.GetSetting("bot_password");
-			txtChannel.Text = (string)settings.GetSetting("channel");
+			var config = Config.ApplyJson(File.ReadAllText(Application.StartupPath + @"\settings.conf"));
+			Config.SetUserConfig(config);
 
-			//General bot settings
-			chkboxAutoStart.Checked = GetBool(settings.GetSetting("auto_start_bot").ToString());
-            txtCooldownTime.Text = (string)settings.GetSetting("command_cooldown");
-            txtWelcomeMessage.Text = (string)settings.GetSetting("welcome_message");
-			txtLeavingMessage.Text = (string)settings.GetSetting("leaving_message");
-			chkboxLogChatMessages.Checked = GetBool(settings.GetSetting("log_chat_messages").ToString());
-			chkboxPurgeNonSubsLinks.Checked = GetBool(settings.GetSetting("purge_non_sub_links").ToString());
+			if(Config.User) {
+				txtBotUsername.Text = Config.User.Settings.BotUsername;
+				txtBotPassword.Text = Config.User.Settings.BotPassword;
+				txtChannel.Text = Config.User.Settings.Channel;
 
-			//Giveaway settings
-			txtGiveawayPointsEarnedPerX.Text = (string)settings.GetSetting("giveaway_points_per_minute");
-        }
+				//General bot settings
+				chkboxAutoStart.Checked = Config.User.Settings.AutoStartBotOnLoad;
+				txtWelcomeMessage.Text = Config.User.Settings.WelcomeMessage;
+				txtLeavingMessage.Text = Config.User.Settings.LeavingMessage;
+				chkboxLogChatMessages.Checked = Config.User.Settings.ShouldLogChatMessages;
+				chkboxPurgeNonSubsLinks.Checked = Config.User.Settings.PurgeNonSubLinks;
+
+				//Giveaway settings
+				txtGiveawayPointsEarnedPerX.Text = Config.User.Settings.GiveawayPointsEarned;
+			}
+		}
 
 		private void chkboxAutoStart_CheckedChanged(object sender, EventArgs e) {
 			SaveSettings();
@@ -202,58 +177,6 @@ namespace TwitchBot {
 		private void btnSaveSettings_Click(object sender, EventArgs e) {
 			SaveSettings();
 		}
-
-		/*
-		public void saveSettings() {
-			Settings = new Bot_Settings {
-				AutoStartProgram = chkboxAutoStart.Checked,
-				Channel = ChannelConnection.get_channel(true),
-				WelcomeMessage = txtWelcomeMessage.Text,
-				LeavingMessage = txtLeavingMessage.Text,
-				CMDCooldown = txtCooldownTime.Text,
-				LogChatMessages = chkboxLogChatMessages.Checked,
-				PurgeNonSubLinks = chkboxPurgeNonSubsLinks.Checked,
-
-				//Giveaway settings
-				Giveaway_PointsPerMinute = Convert.ToInt32(txtGiveawayPointsEarnedPerX.Text)
-			};
-
-			StreamWriter sw = new StreamWriter(Program.settingsFile);
-			sw.WriteLine(JsonConvert.SerializeObject(Settings, Formatting.Indented));
-			sw.Close();
-			
-		}
-		*/
-
-		/*
-		public void loadSettings() {
-			if(File.Exists(Program.settingsFile)) {
-				StreamReader srBot = new StreamReader(Program.settingsFile);
-				var settings = JsonConvert.DeserializeObject<Bot_Settings>(srBot.ReadToEnd());
-				FileInfo FileInf = new FileInfo(Program.settingsFile);
-
-				if(!(FileInf.Length == 0)) {
-					//Bot settings
-					chkboxAutoStart.Checked = settings.AutoStartProgram;
-					txtChannel.Text = settings.Channel;
-
-					txtWelcomeMessage.Text = settings.WelcomeMessage;
-
-					txtLeavingMessage.Text = settings.LeavingMessage;
-					txtCooldownTime.Text = settings.CMDCooldown;
-
-					chkboxLogChatMessages.Checked = settings.LogChatMessages;
-					chkboxPurgeNonSubsLinks.Checked = settings.PurgeNonSubLinks;
-
-					//Giveaway settings
-					txtGiveawayPointsEarnedPerX.Text = Convert.ToString(settings.Giveaway_PointsPerMinute);
-				}
-
-				srBot.Close();
-			}
-		}
-		*/
-
 
 		#endregion "Save/Load Settings"
 
@@ -412,12 +335,12 @@ namespace TwitchBot {
 								var adminCmd = processor as IAdminChatCommand;
 								if(adminCmd != null) {
 									if(adminCmd.BypassEnabledStatus) {
-										ProcessCommandData(sendViaChat, returnMessage);
+										ProcessCommandData(returnMessage);
 										break;
 									}
 								} else {
 									if(ChatSettings.BotEnabled) {
-										ProcessCommandData(sendViaChat, returnMessage);
+										ProcessCommandData(returnMessage);
 										break;
 									}
 								}
@@ -433,13 +356,7 @@ namespace TwitchBot {
 			}
 		}
 
-		private void ProcessCommandData(bool sendViaChat, string message) {
-			if(sendViaChat) {
-				channelConnection.send_message(message);
-			} else {
-				whisperConnection.send_message(message);
-			}
-		}
+		private void ProcessCommandData(string message) => channelConnection.send_message(message);
 
 		private void ProcessCommandData(CommandData command) {
 			if(command != null) {
@@ -456,11 +373,7 @@ namespace TwitchBot {
 				}
 
 				//Use the command data in order to generate a custom reply
-                if(command.SendViaChat) {
-					channelConnection.send_message(messageToSend);
-				} else {
-					whisperConnection.send_message(messageToSend);
-				}
+				channelConnection.send_message(messageToSend);
 			}
 
 			CommandManager.SaveCommand(command);
@@ -529,8 +442,8 @@ namespace TwitchBot {
 
 		public delegate void AddGiveawayUserToListInvoker(string user);
 		public void AddGiveawayUserToList(string user) {
-			if(this.InvokeRequired) {
-				this.Invoke(new AddGiveawayUserToListInvoker(AddGiveawayUserToList), user);
+			if(InvokeRequired) {
+				Invoke(new AddGiveawayUserToListInvoker(AddGiveawayUserToList), user);
 			} else {
 				giveawayEnteredUsers.Items.Add(user);
 				if(giveawayEnteredUsers.Items.Count >= 1) {
@@ -544,8 +457,8 @@ namespace TwitchBot {
 		private readonly List<string> giveawayWinners = new List<string>();
 
 		private void GiveawayTimerFinished(object s, EventArgs e) {
-			if(this.InvokeRequired) {
-				this.Invoke(new GiveawayTimerFinishedInvoke(GiveawayTimerFinished), s, e);
+			if(InvokeRequired) {
+				Invoke(new GiveawayTimerFinishedInvoke(GiveawayTimerFinished), s, e);
 			} else {
 				if(giveawayActive) {
 					if(channelConnection.Users.Count > 1) {
@@ -579,11 +492,11 @@ namespace TwitchBot {
 								}
 								channelConnection.send_message(winnerMsg + " Congratulations, the winners will get their prize(s) shortly.");
 								lblGiveawayProgress.Text = @"A giveaway has finished, the winners were: " + winnerMsg;
-								whisperConnection.send_message("/w " + whisperConnection.get_channel(false) + " A giveaway has finished, the winners were: " + winnerMsg);
+								channelConnection.send_message("/w " + channelConnection.get_channel() + " A giveaway has finished, the winners were: " + winnerMsg);
 							} else {
 								channelConnection.send_message("The giveaway has finished. The winner is " + giveawayWinners[0] + ", congratulations! You will get your prize(s) soon!");
 								lblGiveawayProgress.Text = @"A giveaway has finished, the winner was: " + giveawayWinners[0];
-								whisperConnection.send_message("/w " + whisperConnection.get_channel(false) + " A giveaway has finished, the winner was: " + giveawayWinners[0]);
+								channelConnection.send_message("/w " + channelConnection.get_channel() + " A giveaway has finished, the winner was: " + giveawayWinners[0]);
 							}
 						} else {
 							channelConnection.send_message("Not enough people entered the giveaway so there was no winner.");
@@ -607,8 +520,8 @@ namespace TwitchBot {
 		private delegate void GiveawayLengthProgressReportInvoke(object s, EventArgs e);
 
 		private void GiveawayLengthProgressReport(object s, EventArgs e) {
-			if(this.InvokeRequired) {
-				this.Invoke(new GiveawayLengthProgressReportInvoke(GiveawayLengthProgressReport), s, e);
+			if(InvokeRequired) {
+				Invoke(new GiveawayLengthProgressReportInvoke(GiveawayLengthProgressReport), s, e);
 			} else {
 				var curTimeLeft = Math.Round(giveawayFinishTime - UnixTimestamp());
 				lblGiveawayLengthProgress.Text = curTimeLeft + @" seconds left on giveaway.";
@@ -640,13 +553,8 @@ namespace TwitchBot {
 			if(txtCommand.Text != "") {
 				var user = new TwitchUser("ManselD", "", true);
 				Program.BotForm.ProcessReceivedData(user, txtCommand.Text.Split(' '));
-				if(txtCommand.Text.StartsWith("/w ")) {
-					whisperConnection.send_message(txtCommand.Text);
-					txtCommand.Clear();
-				} else {
-					channelConnection.send_message(txtCommand.Text);
-					txtCommand.Clear();
-				}
+				channelConnection.send_message(txtCommand.Text);
+				txtCommand.Clear();
             }
 		}
 

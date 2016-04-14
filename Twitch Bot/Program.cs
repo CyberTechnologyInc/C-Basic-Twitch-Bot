@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 
 namespace TwitchBot {
@@ -6,7 +7,6 @@ namespace TwitchBot {
 		public static Bot BotForm { get; set; }
 
 		public static double CurrentVersion { get; private set; }
-		public static string ApiCode { get; set; }
 		public static string Username { get; set; }
 		public static string SettingsDirectory;
 		public static string LoginSettingsFile;
